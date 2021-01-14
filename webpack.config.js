@@ -206,7 +206,7 @@ const getConfig = (support, isProd) => {
             })
         );
         config.plugins.push(
-            new webpack.optimize.UglifyJsPlugin(
+            new webpack.optimize.minimize(
                 {
                     compress: {
                         warnings: false,
