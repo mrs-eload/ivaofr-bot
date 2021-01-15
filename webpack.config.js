@@ -2,7 +2,7 @@ const debug = true;
 
 const path = require('path');
 const webpack = require('webpack');
-
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const StringReplacePlugin = require("string-replace-webpack-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
@@ -198,6 +198,21 @@ const getConfig = (support, isProd) => {
     };
 
     if (isProd) {
+        config.optimization = {
+            minimizer: [new UglifyJsPlugin({
+                compress: {
+                    warnings: false,
+                    screw_ie8: true
+                },
+                minimize: true,
+                beautify: false,
+                mangle: {
+                    screw_ie8: true,
+                    keep_fnames: true
+                },
+                comments: false
+            })],
+        }
         config.plugins.push(
             new webpack.DefinePlugin({
                 'process.env': {
@@ -205,10 +220,6 @@ const getConfig = (support, isProd) => {
                 }
             })
         );
-        config.plugins.push(
-            new webpack.Optimization({
-                minimize: true,
-            }));
     }
 
     return config;
