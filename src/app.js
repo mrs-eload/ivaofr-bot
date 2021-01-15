@@ -6,7 +6,7 @@ console.log(parsed);
 const invites = {};
 
 const bot = new Discord.Client({fetchAllMembers:true});
-bot.login('NzI5MDE1MDQ1ODc0NTE1OTg4.Xw4YHw.qyI22x7t_vwXgGn2FazcMqNLk7g');
+bot.login(process.env.BOT_TOKEN);
 
 let user_invite = {};
 let ivao_user = {};

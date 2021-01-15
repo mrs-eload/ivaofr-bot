@@ -25,7 +25,7 @@ bot.on('message', function (message) {
     }
 });
 
-bot.login('NzI5MDE1MDQ1ODc0NTE1OTg4.Xw4YHw.qyI22x7t_vwXgGn2FazcMqNLk7g');
+bot.login(process.env.BOT_TOKEN);
 
 app.use(bodyParser.urlencoded({
     extended: true
