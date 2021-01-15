@@ -205,10 +205,10 @@ const getConfig = (support, isProd) => {
                 }
             })
         );
-        config.plugins.push({
-            optimization: {
+        config.plugins.push(
+            new webpack.Optimization({
                 minimize: true,
-        }});
+            }));
     }
 
     return config;
