@@ -205,23 +205,10 @@ const getConfig = (support, isProd) => {
                 }
             })
         );
-        config.plugins.push(
-            new webpack.optimization.minimize(
-                {
-                    compress: {
-                        warnings: false,
-                        screw_ie8: true
-                    },
-                    minimize: true,
-                    beautify: false,
-                    mangle: {
-                        screw_ie8: true,
-                        keep_fnames: true
-                    },
-                    comments: false
-                }
-            )
-        );
+        config.plugins.push({
+            optimization: {
+                minimize: true,
+            }});
         config.plugins.push(
             new webpack.optimize.OccurrenceOrderPlugin()
         );
