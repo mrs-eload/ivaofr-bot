@@ -9,6 +9,9 @@
     "dev": "webpack-dev-server",
     "build": "webpack"
   },
+  "engines": {
+    "node": "10.x"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
