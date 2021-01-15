@@ -208,10 +208,7 @@ const getConfig = (support, isProd) => {
         config.plugins.push({
             optimization: {
                 minimize: true,
-            }});
-        config.plugins.push(
-            new webpack.optimize.OccurrenceOrderPlugin()
-        );
+        }});
     }
 
     return config;
