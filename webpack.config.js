@@ -199,19 +199,7 @@ const getConfig = (support, isProd) => {
 
     if (isProd) {
         config.optimization = {
-            minimizer: [new UglifyJsPlugin({
-                compress: {
-                    warnings: false,
-                    screw_ie8: true
-                },
-                minimize: true,
-                beautify: false,
-                mangle: {
-                    screw_ie8: true,
-                    keep_fnames: true
-                },
-                comments: false
-            })],
+            minimizer: [new UglifyJsPlugin()],
         }
         config.plugins.push(
             new webpack.DefinePlugin({
