@@ -21,7 +21,11 @@ if(!parsed.IVAOTOKEN || parsed.IVAOTOKEN === "error"){
             g.fetchInvites().then(guildInvites => {
                 invites[g.id] = guildInvites;
                 console.log(invites);
-            });
+            })
+                .catch(e => {
+                    console.error("Can't fetch invites");
+                    throw e
+                })
         });
     });
 

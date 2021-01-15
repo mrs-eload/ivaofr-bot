@@ -35,6 +35,8 @@ app.use(bodyParser.json())
 app.use(cors());
 app.listen(8081)
 
+app.use('/', express.static(__dirname + '/public'));
+
 app.post('/login', cors({origin:'*'}), (req,res,next) => {
     const query = req.body;
     nodefetch(`https://login.ivao.aero/api.php?type=json&token=${query.token}`,{ method: 'POST'})
