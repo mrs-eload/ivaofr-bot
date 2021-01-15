@@ -35,7 +35,7 @@ app.use(bodyParser.json())
 app.use(cors());
 app.listen(process.env.PORT || 8081)
 
-app.use('/', express.static(__dirname + '/public'));
+app.use('/', express.static(__dirname + '/../public'));
 
 app.post('/login', cors({origin:'*'}), (req,res,next) => {
     const query = req.body;
