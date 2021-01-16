@@ -6,7 +6,7 @@ const app = express();
 const cors = require('cors');
 
 const redisCli = require("redis");
-const redis = redisCli.createClient();
+const redis = redisCli.createClient(process.env.REDIS_URL);
 
 const bot = new Discord.Client({fetchAllMembers:true});
 const invites = {};
