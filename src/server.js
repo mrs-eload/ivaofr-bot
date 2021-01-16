@@ -5,19 +5,23 @@ const bodyParser = require('body-parser')
 const app = express();
 const cors = require('cors');
 
+const redisCli = require("redis");
+const redis = redisCli.createClient();
+
 const bot = new Discord.Client({fetchAllMembers:true});
 const invites = {};
-bot.on('ready', function () {
-    console.log("Je suis connecté !");
-    setTimeout(() => {
-        bot.guilds.cache.each(g => {
-            g.fetchInvites().then(guildInvites => {
-                invites[g.id] = guildInvites;
-            });
-        });
-    },0)
+const guild_invites = new Map();
 
-});
+bot.login(process.env.BOT_TOKEN);
+
+bot.on('ready', function () {
+    console.log("Je suis connecté !")
+    bot.guilds.cache.each(g => {
+        g.fetchInvites()
+            .then(guildInvites => guild_invites.set(g.id, guildInvites))
+            .catch(err => console.log(err))
+    })
+})
 
 bot.on('message', function (message) {
     if (message.content === 'ping') {
@@ -25,7 +29,39 @@ bot.on('message', function (message) {
     }
 });
 
-bot.login(process.env.BOT_TOKEN);
+bot.on('guildMemberAdd', async (member) => {
+    const cached_invites = guild_invites.get(member.guild.id)
+    const new_invites = await member.guild.fetchInvites()
+
+    //Refresh cache
+    guild_invites.set(member.guild.id, new_invites)
+
+    //Find used invite
+    const used_invite = new_invites.find( invite => cached_invites.get(invite.code).uses < invite.uses)
+
+
+    if(used_invite && used_invite.inviter.username === 'IVAOFR'){
+        redis.hgetall(used_invite.code, (err, ivao_user) => {
+            if(err) throw err;
+            let username = `${ivao_user.name} - ${ivao_user.vid}`;
+            let staff_role = member.guild.roles.cache.find(role => role.name === 'staff')
+            let member_role = member.guild.roles.cache.find(role => role.name === 'membre')
+
+            member.setNickname(username);
+            if(ivao_user.staff && ivao_user.staff.length > 0){
+                member.roles.add(staff_role);
+            }else{
+                member.roles.add(member_role);
+            }
+            redis.del(used_invite.code, (err, ivao_user) => {
+               if(err) throw err;
+            });
+            used_invite.delete().then(result => console.log(result)).catch(err => console.log(err));
+            console.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.tag}. Invite was used ${used_invite.uses} times since its creation.`);
+        })
+        //Get info from Redis
+    }
+});
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -47,29 +83,25 @@ app.post('/login', cors({origin:'*'}), (req,res,next) => {
             const invite = chan.createInvite({
                 temporary: true,
                 unique:true,
-                maxUses:1
-            }).then((invite) => {
-                res.send({
-                    invite,
-                    ivao_user: json
-                })
-            });
+                maxUses:2,
+                reason: `Invite member ${json.vid}`
         })
-        .catch(error => res.end(error));
-});
-
-app.post('/user', cors({origin: '*'}), (req,res,next) => {
-    const query = req.body;
-    let {username,member} = query;
-    member = JSON.parse(member);
-    const guild = bot.guilds.cache.find(g => member.guildID === g.id);
-    const guild_member = guild.member(member.userID);
-    const chan = bot.channels.cache.find(channel => channel.name === 'accueil');
-    chan.send(`Hello ${guild_member.displayName}!`);
-    const member_role = guild.roles.cache.find(r => r.name === "IVAO Member");
-    guild_member.setNickname(username).then(() => {
-        chan.send(`Ton pseudo est maintenant ${username}!`);
-        guild_member.roles.add(member_role);
-        chan.send(`Tu as été ajouté au groupe ${member_role.name}!`);
-    });
+        .then((invite) => {
+            bot.guilds.cache.each(g => {
+                g.fetchInvites()
+                    .then(guildInvites => guild_invites.set(g.id, guildInvites))
+                    .catch(err => console.log(err))
+            })
+            //Stockage Redis
+            redis.hmset(invite.code,
+                "vid",json.vid,
+                "name", `${json.firstname} ${json.lastname}`,
+                "code", invite.code,
+                "staff", json.staff)
+            res.send({
+                invite,
+                ivao_user: json
+            })
+        });
+    }).catch(error => res.end(error));
 });
