@@ -1,4 +1,5 @@
-const client = require('../core/Bot');
+const storage = require('../store/store')(process.env.STORAGE)
+const client = require('../core/Bot')(storage);
 const bot = client.connect();
 
 bot.on('guildMemberRemove', async member => {
@@ -6,6 +7,8 @@ bot.on('guildMemberRemove', async member => {
         limit: 1,
         type: 'MEMBER_KICK',
     });
+
+    const allLogs = await member.guild.fetchAuditLogs()
     // Since we only have 1 audit log entry in this collection, we can simply grab the first one
     const kickLog = fetchedLogs.entries.first();
 

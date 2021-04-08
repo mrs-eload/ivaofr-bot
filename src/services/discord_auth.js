@@ -1,7 +1,9 @@
-const client = require('../core/Bot');
+const storage = require('../store/store')(process.env.STORAGE)
+const client = require('../core/Bot')(storage);
+const DiscordUser = require('../core/DiscordUser')
 const bot = client.connect();
-const redis = require('../core/Redis').connect();
-const fetch = require('node-fetch')
+const Roles = require('./roles')()
+
 
 bot.on('message', function (message) {
     if (message.content === 'ping') {
@@ -10,15 +12,10 @@ bot.on('message', function (message) {
 });
 
 module.exports.findUser = ivao_user => {
-    return new Promise ((resolve, reject) => {
-        redis.hgetall(ivao_user.id, (err, member) => {
-            if(err){
-                console.log(err);
-                resolve();
-            }
-            resolve(member);
-        })
+    const discord_user = new DiscordUser({
+        user_id: ivao_user.id,
     })
+    return storage.get(discord_user)
 }
 
 bot.on('guildMemberAdd', async member => {
@@ -27,6 +24,8 @@ bot.on('guildMemberAdd', async member => {
 
     //Get newest invites from Discord
     const new_invites = await member.guild.fetchInvites();
+
+    if(!cached_invites) client.log.log('no cached_invites found')
 
     //Find used invite
     const used_invite = new_invites.find( invite => {
@@ -38,30 +37,36 @@ bot.on('guildMemberAdd', async member => {
 
     // Check invite exists and inviter is legit
     if(used_invite && used_invite.inviter.username === 'IVAOFR'){
-        //Find matching IVAO user in Redis
-        redis.hgetall(used_invite.code, (err, ivao_user) => {
-            if(err) {
-                //Delete vite if something goes wrong
-                used_invite.delete().then(result => console.log(result)).catch(err => console.log(err));
-                console.error(`Error occured while getting user invite from db`, err);
-                throw err;
+        //Ask website for DiscordUser
+        const discord_user = new DiscordUser({
+            invite_code: used_invite.code
+        });
+
+        await storage.find(discord_user)
+        .then(result => result.json()).catch((err) => { throw new Error(err) })
+        .then(data => {
+            if(data.status <= 400){
+                console.error(`error with request`)
+                console.log(data);
+                throw new Error(`error with request`);
             }
-
-            if(ivao_user === null) return console.error(`No matching user found with invite ${used_invite.code}`);
-
-            //Register user into db
-            redis.hmset(member.user.id,
-                "vid",ivao_user.vid,
-                "name", `${ivao_user.name}`,
-                "discord_id", member.user.id,
-                "staff", ivao_user.staff,
-                "created_at", new Date().getTime()
-            )
-            //Delete invite info
-            redis.del(used_invite.code, (err) => { if(err) throw err });
+            for(let key in data.response){
+                discord_user[key]= data.response[key];
+            }
+            discord_user.discord_id = member.id;
             used_invite.delete().then(result => console.log(result)).catch(err => console.log(err));
-            client.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
+            client.log(`IVAO Member ${discord_user.user_id} clicked on his invitation link`)
+
+            return discord_user;
+
         })
+        .then (discord_user => storage.update(discord_user))
+        .catch((err) => {
+            console.error(err)
+        });
+
+        //Find matching IVAO user in Redis
+        client.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
     }else{
         client.log(`Invite not found or Inviter is not correct`);
         client.log(`used_invite found is ${used_invite}`);
@@ -72,48 +77,66 @@ bot.on('guildMemberAdd', async member => {
 
 bot.on('guildMemberUpdate', async (old, member) => {
     try{
+        //detect rules acceptations
         let active_screening = await member.guild.fetchMembershipScreening()
-        if(active_screening.enabled && member.pending === false){
-            redis.hgetall(member.user.id, (err, ivao_user) => {
-
-                //try to ask for info to server
-                if(ivao_user === null){
-                    return
-                    // fetch(`${process.env.WEBSITE_DISCORD_API_URL}/api/discord/user`, {
-                    //     method:'PUT',
-                    //     body: {
-                    //         token: process.env.WEBSITE_DISCORD_API_TOKEN,
-                    //         ivao_user
-                    //     },
-                    // }).then(() => {});
-                }
-
-                //Set member username
-                let username = `${ivao_user.name} - ${ivao_user.vid}`;
-                if(member.nickname !== username){
-                    member.setNickname(username);
-                    // //Update website
-                    // fetch(`${process.env.WEBSITE_DISCORD_API_URL}/api/discord/user`, {
-                    //     method:'PUT',
-                    //     body: {
-                    //         token: process.env.WEBSITE_DISCORD_API_TOKEN,
-                    //         ivao_user
-                    //     },
-                    // }).then(() => {});
-                }
-
-                let staff_role = member.guild.roles.cache.find(role => role.name === 'staff')
-                let member_role = member.guild.roles.cache.find(role => role.name === 'membre')
-                let role = (ivao_user.staff) ? staff_role : member_role;
-
-                if(!member.roles.cache.has(role.id)) member.roles.add(role);
-
-                client.log(`User ${member.user.id} is known as ${username} and has role ${role.name}`)
+        if(active_screening.enabled && old.pending === true && member.pending === false){
+            const discord_user = new DiscordUser({
+                discord_id: member.id
             });
+            let roles = Roles.fetchRoles(member.guild)
+            await storage.find(discord_user)
+                .then(result => result.json()).catch((err) => { throw new Error(err) })
+                .then(data => {
+                    if(data === null || data.status <= 404){
+                        console.error(`error with request`)
+                        console.log(data);
+                        throw new Error(`error with request`);
+                    }
+                    for(let key in data.response){
+                        discord_user[key]= data.response[key];
+                    }
+
+                    client.log(`IVAO Member ${discord_user.nickname} has accepted rules`)
+                    //Set member username
+                    if(member.nickname !== discord_user.nickname){
+                        member.setNickname(discord_user.nickname);
+                    }
+
+                    let role = roles.member_role;
+                    if(discord_user.is_staff){
+                        role = roles.staff_role;
+                    }
+
+                    if(!member.roles.cache.has(role.id)) member.roles.add(role);
+                    client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${role.name}`)
+                    discord_user.is_pending = false;
+                    discord_user.is_active = true;
+                    return discord_user;
+                })
+                .then (discord_user => storage.update(discord_user))
+                .catch((err) => {
+                    console.error(err)
+                });
+
         }
+
+        //Active member
+        if(old.pending === false && member.pending === false){
+
+        }
+
     }catch(e){}
 })
 
 bot.on('guildMemberRemove', async (member) => {
-    redis.del(member.user.id, (err) => { if(err) throw err; });
+    // redis.del(member.user.id, (err) => { if(err) throw err; });
+    const discord_user = new DiscordUser({
+        discord_id: member.id
+    });
+    await storage.remove(discord_user).then(result => {
+        console.log(result)
+        if(result.status < 400){
+            client.log(`Discord member with id ${discord_user.discord_id} has been removed from the website`);
+        }
+    })
 });

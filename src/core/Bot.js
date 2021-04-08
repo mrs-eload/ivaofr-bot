@@ -1,6 +1,5 @@
 const Discord = require ('discord.js');
-const redis = require('./Redis').connect();
-
+const DiscordUser = require('./DiscordUser')
 class Bot {
 
     constructor(){
@@ -11,12 +10,17 @@ class Bot {
         return Bot.instance;
     }
 
+    static storageSetup(storage){
+        Bot.storage = storage
+        return Bot;
+    }
 
     static findChannel(channel_name){
         return Bot.client.channels.cache.find(channel => {
             return channel.guild.id === process.env.GUILD_ID && channel.name === channel_name
         });
     }
+
     static createInvite(opts){
         const{channel_name} = opts;
         const channel = Bot.findChannel(channel_name);
@@ -32,19 +36,22 @@ class Bot {
 
     static async saveInvite(opts){
         const {invite, ivao_member} = opts;
-        //Stockage Redis
-        redis.hmset(invite.code,
-            "vid",ivao_member.id,
-            "name", `${ivao_member.first_name} ${ivao_member.last_name}`,
-            "code", invite.code,
-            "staff", (ivao_member.division_staff) ? ivao_member.staff : "",
-            "created_at", new Date().getTime()
-        )
-        return Bot.refresh_invites()
+        const discord_user = new DiscordUser({
+            user_id: ivao_member.id,
+            invite_code: invite.code,
+            invite_url: invite.url,
+            is_pending: true
+        })
+        await Bot.refresh_invites()
+        return discord_user;
     }
 
     static async fetchInvites(guild_id){
         return guild_id.fetchInvites();
+    }
+
+    static async fetchRoles(guild_id){
+        return Bot.guild.get('roles')
     }
 
     static async refresh_invites(){
@@ -98,6 +105,9 @@ class Bot {
         else Bot._guild = val;
     }
 
+    /**
+     * @return {GuildManager}
+     */
     static get guild(){
         return Bot._guild;
     }
@@ -127,4 +137,4 @@ class Bot {
 }
 
 const bot = new Bot();
-module.exports = Bot;
+module.exports = (storage) => Bot.storageSetup(storage)

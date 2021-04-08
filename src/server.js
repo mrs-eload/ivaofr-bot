@@ -1,11 +1,17 @@
 require('dotenv').config()
-const nodefetch = require('node-fetch');
 const express = require('express');
 const bodyParser = require('body-parser')
+const nodefetch = require('node-fetch')
 const app = express();
 const cors = require('cors');
-const client = require('./core/Bot');
+
+// Choose storage method for bot data
+const storage = require('./store/store')(process.env.STORAGE)
+const client = require('./core/Bot')(storage);
 const bot = client.connect()
+
+
+//Load bot modules
 const discord_auth = require('./services/discord_auth');
 const mod_logger = require('./services/moderation_logger');
 
@@ -31,22 +37,14 @@ app.post('/invite', cors({origin:'*'}), async (req,res,next) => {
     const ivao_member = query.user;
     let inv  = { invite:undefined, user:undefined };
     if(ivao_member){
-
-        if(ivao_member.discord_id){
-            let user = await discord_auth.findUser(ivao_member.discord_id)
-            if(user){
-                inv.user = user
-                return res.send(inv)
-            }
-        }
-
         client.createInvite({
             channel_name: process.env.INVITE_CHANNEL
         })
         .then((invite) => {
             inv  = { invite, ivao_member }
-            client.saveInvite(inv)
-            .then( () => res.send(inv))
+            client.saveInvite(inv).then( (discord_user) => {
+                res.send(discord_user)
+            }).catch((err) => res.send(err))
         });
     }else{
         res.sendStatus(400);
