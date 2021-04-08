@@ -6,9 +6,9 @@ bot.on('guildMemberRemove', async member => {
     const fetchedLogs = await member.guild.fetchAuditLogs({
         limit: 1,
         type: 'MEMBER_KICK',
+        user: member
     });
 
-    const allLogs = await member.guild.fetchAuditLogs()
     // Since we only have 1 audit log entry in this collection, we can simply grab the first one
     const kickLog = fetchedLogs.entries.first();
 
@@ -32,6 +32,7 @@ bot.on('guildBanAdd', async (guild, user) => {
     const fetchedLogs = await guild.fetchAuditLogs({
         limit: 1,
         type: 'MEMBER_BAN_ADD',
+        user: user
     });
     // Since we only have 1 audit log entry in this collection, we can simply grab the first one
     const banLog = fetchedLogs.entries.first();
