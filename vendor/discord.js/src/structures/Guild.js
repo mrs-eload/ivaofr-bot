@@ -18,6 +18,7 @@ const RoleManager = require('../managers/RoleManager');
 const VoiceStateManager = require('../managers/VoiceStateManager');
 const Collection = require('../util/Collection');
 const {
+  browser,
   ChannelTypes,
   DefaultMessageNotifications,
   PartialTypes,
@@ -170,10 +171,8 @@ class Guild extends Base {
      * * DISCOVERABLE
      * * FEATURABLE
      * * INVITE_SPLASH
-     * * MEMBER_VERIFICATION_GATE_ENABLED
      * * NEWS
      * * PARTNERED
-     * * PREVIEW_ENABLED
      * * RELAY_ENABLED
      * * VANITY_URL
      * * VERIFIED
@@ -630,6 +629,27 @@ class Guild extends Base {
   }
 
   /**
+   * The voice state for the client user of this guild, if any
+   * @type {?VoiceState}
+   * @readonly
+   */
+  get voice() {
+    return this.voiceStates.cache.get(this.client.user.id);
+  }
+
+  /**
+   * Returns the GuildMember form of a User object, if the user is present in the guild.
+   * @param {UserResolvable} user The user that you want to obtain the GuildMember of
+   * @returns {?GuildMember}
+   * @example
+   * // Get the guild member of a user
+   * const member = guild.member(message.author);
+   */
+  member(user) {
+    return this.members.resolve(user);
+  }
+
+  /**
    * Fetches this guild.
    * @returns {Promise<Guild>}
    */
@@ -962,52 +982,6 @@ class Guild extends Base {
   }
 
   /**
-   * Data for a field in Membership Screening
-   * @typedef {Object} GuildMembershipScreeningField
-   * @property {MembershipScreeningType} fieldType The type of the field
-   * @property {string} label The title of the field
-   * @property {string[]} [values] The list of values in the field
-   * @property {boolean} required Whether the user has to fill out this field
-   */
-
-  /**
-   * Data for the Guild Membership Screening object
-   * @typedef {Object} GuildMembershipScreening
-   * @property {boolean} enabled Whether membership screening is enabled
-   * @property {string} description The server description shown in the membership screening form
-   * @property {GuildMembershipScreeningField[]} formFields The steps in the membership screening form
-   */
-
-  /**
-   * Fetches the guild Membership Screening data.
-   * @returns {Promise<GuildMembershipScreening>}
-   * @example
-   * // Fetches the guild membership screening options
-   * guild.fetchMembershipScreening()
-   *   .then(memberScreen => {
-   *     const requiredFields = memberScreen.formFields.filter(field => field.required);
-   *     console.log(`Screening has ${memberScreen.formFields.length} steps, ${requiredFields.length} are required`);
-   *   })
-   *   .catch(console.error);
-   */
-  async fetchMembershipScreening() {
-    if (!this.features.includes('COMMUNITY')) {
-      throw new Error('COMMUNITY');
-    }
-    const data = await this.client.api.guilds(this.id)['member-verification'].get();
-    return {
-      enabled: this.features.includes('MEMBER_VERIFICATION_GATE_ENABLED'),
-      description: data.description,
-      formFields: data.form_fields.map(field => ({
-        fieldType: field.field_type,
-        label: field.label,
-        values: field.values,
-        required: field.required,
-      })),
-    };
-  }
-
-  /**
    * Adds a user to the guild using OAuth2. Requires the `CREATE_INSTANT_INVITE` permission.
    * @param {UserResolvable} user User to add to the guild
    * @param {Object} options Options for the addition
@@ -1038,7 +1012,7 @@ class Guild extends Base {
     }
     const data = await this.client.api.guilds(this.id).members(user).put({ data: options });
     // Data is an empty buffer if the member is already part of the guild.
-    return data instanceof Buffer ? this.members.fetch(user) : this.members.add(data);
+    return data instanceof (browser ? ArrayBuffer : Buffer) ? this.members.fetch(user) : this.members.add(data);
   }
 
   /**
@@ -1468,45 +1442,6 @@ class Guild extends Base {
         reason,
       })
       .then(() => this);
-  }
-
-  /**
-   * A `Partial` object is a representation of any existing object.
-   * This object contains between 1 and all of the original objects parameters.
-   * This is true regardless of whether the parameters are optional in the base object.
-   * @typedef {Object} Partial
-   */
-
-  /**
-   * Edits the guild's membership screening form.
-   * @param {Partial<GuildMembershipScreening>} memberScreen The membership screening data for the guild
-   * @returns {Promise<GuildMembershipScreening>}
-   */
-  async setMembershipScreening(memberScreen) {
-    if (!this.features.includes('COMMUNITY')) {
-      throw new Error('COMMUNITY');
-    }
-    const fields = memberScreen.formFields?.map(field => ({
-      field_type: field.fieldType,
-      label: field.label,
-      values: field.values,
-      required: field.required,
-    }));
-    const data = {};
-    if (typeof memberScreen.enabled !== 'undefined') data.enabled = memberScreen.enabled;
-    if (typeof memberScreen.description !== 'undefined') data.description = memberScreen.description;
-    if (typeof memberScreen.formFields !== 'undefined') data.form_fields = JSON.stringify(fields);
-    const res = await this.client.api.guilds(this.id)['member-verification'].patch({ data });
-    return {
-      enabled: memberScreen.enabled ?? this.features.includes('MEMBER_VERIFICATION_GATE_ENABLED'),
-      description: res.description,
-      formFields: res.form_fields.map(field => ({
-        fieldType: field.field_type,
-        label: field.label,
-        values: field.values,
-        required: field.required,
-      })),
-    };
   }
 
   /**

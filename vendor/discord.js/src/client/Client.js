@@ -5,8 +5,8 @@ const ActionsManager = require('./actions/ActionsManager');
 const ClientVoiceManager = require('./voice/ClientVoiceManager');
 const WebSocketManager = require('./websocket/WebSocketManager');
 const { Error, TypeError, RangeError } = require('../errors');
-const BaseGuildEmojiManager = require('../managers/BaseGuildEmojiManager');
 const ChannelManager = require('../managers/ChannelManager');
+const GuildEmojiManager = require('../managers/GuildEmojiManager');
 const GuildManager = require('../managers/GuildManager');
 const UserManager = require('../managers/UserManager');
 const ShardClientUtil = require('../sharding/ShardClientUtil');
@@ -17,7 +17,7 @@ const Invite = require('../structures/Invite');
 const VoiceRegion = require('../structures/VoiceRegion');
 const Webhook = require('../structures/Webhook');
 const Collection = require('../util/Collection');
-const { Events, DefaultOptions } = require('../util/Constants');
+const { Events, browser, DefaultOptions } = require('../util/Constants');
 const DataResolver = require('../util/DataResolver');
 const Intents = require('../util/Intents');
 const Permissions = require('../util/Permissions');
@@ -89,18 +89,19 @@ class Client extends BaseClient {
     this.actions = new ActionsManager(this);
 
     /**
-     * The voice manager of the client
-     * @type {ClientVoiceManager}
+     * The voice manager of the client (`null` in browsers)
+     * @type {?ClientVoiceManager}
      */
-    this.voice = new ClientVoiceManager(this);
+    this.voice = !browser ? new ClientVoiceManager(this) : null;
 
     /**
      * Shard helpers for the client (only if the process was spawned from a {@link ShardingManager})
      * @type {?ShardClientUtil}
      */
-    this.shard = process.env.SHARDING_MANAGER
-      ? ShardClientUtil.singleton(this, process.env.SHARDING_MANAGER_MODE)
-      : null;
+    this.shard =
+      !browser && process.env.SHARDING_MANAGER
+        ? ShardClientUtil.singleton(this, process.env.SHARDING_MANAGER_MODE)
+        : null;
 
     /**
      * All of the {@link User} objects that have been cached at any point, mapped by their IDs
@@ -130,10 +131,10 @@ class Client extends BaseClient {
      * @private
      * @type {ClientPresence}
      */
-    this.presence = new ClientPresence(this, options.presence);
+    this.presence = new ClientPresence(this);
 
     Object.defineProperty(this, 'token', { writable: true });
-    if (!this.token && 'DISCORD_TOKEN' in process.env) {
+    if (!browser && !this.token && 'DISCORD_TOKEN' in process.env) {
       /**
        * Authorization token for the logged in bot.
        * If present, this defaults to `process.env.DISCORD_TOKEN` when instantiating the client
@@ -165,11 +166,11 @@ class Client extends BaseClient {
 
   /**
    * All custom emojis that the client has access to, mapped by their IDs
-   * @type {BaseGuildEmojiManager}
+   * @type {GuildEmojiManager}
    * @readonly
    */
   get emojis() {
-    const emojis = new BaseGuildEmojiManager(this);
+    const emojis = new GuildEmojiManager({ client: this });
     for (const guild of this.guilds.cache.values()) {
       if (guild.available) for (const emoji of guild.emojis.cache.values()) emojis.cache.set(emoji.id, emoji);
     }
@@ -372,16 +373,8 @@ class Client extends BaseClient {
   }
 
   /**
-   * Options for {@link Client#generateInvite}.
-   * @typedef {Object} InviteGenerationOptions
-   * @property {PermissionResolvable} [permissions] Permissions to request
-   * @property {GuildResolvable} [guild] Guild to preselect
-   * @property {boolean} [disableGuildSelect] Whether to disable the guild selection
-   */
-
-  /**
    * Generates a link that can be used to invite the bot to a guild.
-   * @param {InviteGenerationOptions} [options={}] Options for the invite
+   * @param {InviteGenerationOptions|PermissionResolvable} [options] Permissions to request
    * @returns {Promise<string>}
    * @example
    * client.generateInvite({
@@ -391,29 +384,27 @@ class Client extends BaseClient {
    *   .catch(console.error);
    */
   async generateInvite(options = {}) {
-    if (typeof options !== 'object') throw new TypeError('INVALID_TYPE', 'options', 'object', true);
-
+    if (Array.isArray(options) || ['string', 'number'].includes(typeof options) || options instanceof Permissions) {
+      process.emitWarning(
+        'Client#generateInvite: Generate invite with an options object instead of a PermissionResolvable',
+        'DeprecationWarning',
+      );
+      options = { permissions: options };
+    }
     const application = await this.fetchApplication();
     const query = new URLSearchParams({
       client_id: application.id,
+      permissions: Permissions.resolve(options.permissions),
       scope: 'bot',
     });
-
-    if (options.permissions) {
-      const permissions = Permissions.resolve(options.permissions);
-      if (permissions) query.set('permissions', permissions);
+    if (typeof options.disableGuildSelect === 'boolean') {
+      query.set('disable_guild_select', options.disableGuildSelect.toString());
     }
-
-    if (options.disableGuildSelect) {
-      query.set('disable_guild_select', true);
-    }
-
-    if (options.guild) {
+    if (typeof options.guild !== 'undefined') {
       const guildID = this.guilds.resolveID(options.guild);
       if (!guildID) throw new TypeError('INVALID_TYPE', 'options.guild', 'GuildResolvable');
       query.set('guild_id', guildID);
     }
-
     return `${this.options.http.api}${this.api.oauth2.authorize}?${query}`;
   }
 
@@ -469,6 +460,9 @@ class Client extends BaseClient {
     if (typeof options.fetchAllMembers !== 'boolean') {
       throw new TypeError('CLIENT_INVALID_OPTION', 'fetchAllMembers', 'a boolean');
     }
+    if (typeof options.disableMentions !== 'string') {
+      throw new TypeError('CLIENT_INVALID_OPTION', 'disableMentions', 'a string');
+    }
     if (!Array.isArray(options.partials)) {
       throw new TypeError('CLIENT_INVALID_OPTION', 'partials', 'an Array');
     }
@@ -488,6 +482,14 @@ class Client extends BaseClient {
 }
 
 module.exports = Client;
+
+/**
+ * Options for {@link Client#generateInvite}.
+ * @typedef {Object} InviteGenerationOptions
+ * @property {PermissionResolvable} [permissions] Permissions to request
+ * @property {GuildResolvable} [guild] Guild to preselect
+ * @property {boolean} [disableGuildSelect] Whether to disable the guild selection
+ */
 
 /**
  * Emitted for general warnings.

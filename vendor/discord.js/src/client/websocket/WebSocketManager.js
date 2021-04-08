@@ -76,7 +76,7 @@ class WebSocketManager extends EventEmitter {
 
     /**
      * The current status of this WebSocketManager
-     * @type {Status}
+     * @type {number}
      */
     this.status = Status.IDLE;
 

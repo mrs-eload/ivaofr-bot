@@ -10,7 +10,7 @@ const ReactionCollector = require('./ReactionCollector');
 const { Error, TypeError } = require('../errors');
 const ReactionManager = require('../managers/ReactionManager');
 const Collection = require('../util/Collection');
-const { MessageTypes, SystemMessageTypes } = require('../util/Constants');
+const { MessageTypes } = require('../util/Constants');
 const MessageFlags = require('../util/MessageFlags');
 const Permissions = require('../util/Permissions');
 const SnowflakeUtil = require('../util/Snowflake');
@@ -62,7 +62,7 @@ class Message extends Base {
        * Whether or not this message was sent by Discord, not actually a user (e.g. pin notifications)
        * @type {?boolean}
        */
-      this.system = SystemMessageTypes.includes(this.type);
+      this.system = data.type !== 0;
     } else if (typeof this.type !== 'string') {
       this.system = null;
       this.type = null;
@@ -205,11 +205,11 @@ class Message extends Base {
     this.flags = new MessageFlags(data.flags).freeze();
 
     /**
-     * Reference data sent in a crossposted message or inline reply.
+     * Reference data sent in a crossposted message.
      * @typedef {Object} MessageReference
-     * @property {string} channelID ID of the channel the message was referenced
-     * @property {?string} guildID ID of the guild the message was referenced
-     * @property {?string} messageID ID of the message that was referenced
+     * @property {string} channelID ID of the channel the message was crossposted from
+     * @property {?string} guildID ID of the guild the message was crossposted from
+     * @property {?string} messageID ID of the message that was crossposted
      */
 
     /**
@@ -223,10 +223,6 @@ class Message extends Base {
           messageID: data.message_reference.message_id,
         }
       : null;
-
-    if (data.referenced_message) {
-      this.channel.messages.add(data.referenced_message);
-    }
   }
 
   /**
@@ -288,7 +284,7 @@ class Message extends Base {
    * @readonly
    */
   get member() {
-    return this.guild ? this.guild.members.resolve(this.author) || null : null;
+    return this.guild ? this.guild.member(this.author) || null : null;
   }
 
   /**
@@ -430,18 +426,6 @@ class Message extends Base {
   }
 
   /**
-   * The Message this crosspost/reply/pin-add references, if cached
-   * @type {?Message}
-   * @readonly
-   */
-  get referencedMessage() {
-    if (!this.reference) return null;
-    const referenceChannel = this.client.channels.resolve(this.reference.channelID);
-    if (!referenceChannel) return null;
-    return referenceChannel.messages.resolve(this.reference.messageID);
-  }
-
-  /**
    * Whether the message is crosspostable by the client user
    * @type {boolean}
    * @readonly
@@ -579,32 +563,46 @@ class Message extends Base {
 
   /**
    * Deletes the message.
+   * @param {Object} [options] Options
+   * @param {number} [options.timeout=0] How long to wait to delete the message in milliseconds
+   * @param {string} [options.reason] Reason for deleting this message, if it does not belong to the client user
    * @returns {Promise<Message>}
    * @example
    * // Delete a message
-   * message.delete()
-   *   .then(msg => console.log(`Deleted message from ${msg.author.username}`))
+   * message.delete({ timeout: 5000 })
+   *   .then(msg => console.log(`Deleted message from ${msg.author.username} after 5 seconds`))
    *   .catch(console.error);
    */
-  async delete() {
-    await this.channel.messages.delete(this.id);
-    return this;
+  delete(options = {}) {
+    if (typeof options !== 'object') return Promise.reject(new TypeError('INVALID_TYPE', 'options', 'object', true));
+    const { timeout = 0, reason } = options;
+    if (timeout <= 0) {
+      return this.channel.messages.delete(this.id, reason).then(() => this);
+    } else {
+      return new Promise(resolve => {
+        this.client.setTimeout(() => {
+          resolve(this.delete({ reason }));
+        }, timeout);
+      });
+    }
   }
 
   /**
-   * Send an inline reply to this message.
+   * Replies to the message.
    * @param {StringResolvable|APIMessage} [content=''] The content for the message
-   * @param {MessageOptions|MessageAdditions} [options] The additional options to provide
-   * @param {MessageResolvable} [options.replyTo=this] The message to reply to
+   * @param {MessageOptions|MessageAdditions} [options={}] The options to provide
    * @returns {Promise<Message|Message[]>}
+   * @example
+   * // Reply to a message
+   * message.reply('Hey, I\'m a reply!')
+   *   .then(() => console.log(`Sent a reply to ${message.author.username}`))
+   *   .catch(console.error);
    */
   reply(content, options) {
     return this.channel.send(
       content instanceof APIMessage
         ? content
-        : APIMessage.transformOptions(content, options, {
-            replyTo: this,
-          }),
+        : APIMessage.transformOptions(content, options, { reply: this.member || this.author }),
     );
   }
 

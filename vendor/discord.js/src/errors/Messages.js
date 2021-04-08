@@ -50,6 +50,7 @@ const Messages = {
   VOICE_TOKEN_ABSENT: 'Token not provided from voice server packet.',
   VOICE_SESSION_ABSENT: 'Session ID not supplied.',
   VOICE_INVALID_ENDPOINT: 'Invalid endpoint received.',
+  VOICE_NO_BROWSER: 'Voice connections are not available in browsers.',
   VOICE_CONNECTION_ATTEMPTS_EXCEEDED: attempts => `Too many connection attempts (${attempts}).`,
   VOICE_JOIN_SOCKET_CLOSED: 'Tried to send join packet, but the WebSocket is not open.',
   VOICE_PLAY_INTERFACE_NO_BROADCAST: 'A broadcast cannot be played in this context.',
@@ -70,7 +71,7 @@ const Messages = {
   IMAGE_SIZE: size => `Invalid image size: ${size}`,
 
   MESSAGE_BULK_DELETE_TYPE: 'The messages must be an Array, Collection, or number.',
-  MESSAGE_NONCE_TYPE: 'Message nonce must be an integer or a string.',
+  MESSAGE_NONCE_TYPE: 'Message nonce must fit in an unsigned 64-bit integer.',
 
   TYPING_COUNT: 'Count must be at least 1',
 
@@ -100,8 +101,6 @@ const Messages = {
   REACTION_RESOLVE_USER: "Couldn't resolve the user ID to remove from the reaction.",
 
   VANITY_URL: 'This guild does not have the VANITY_URL feature enabled.',
-
-  COMMUNITY: 'This guild does not have the COMMUNITY feature enabled.',
 
   DELETE_GROUP_DM_CHANNEL: "Bots don't have access to Group DM Channels and cannot delete them",
   FETCH_GROUP_DM_CHANNEL: "Bots don't have access to Group DM Channels and cannot fetch them",

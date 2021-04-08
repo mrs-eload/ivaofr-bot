@@ -2,16 +2,18 @@
 
 const EventEmitter = require('events');
 const WebSocket = require('../../WebSocket');
-const { Status, Events, ShardEvents, OPCodes, WSEvents } = require('../../util/Constants');
+const { browser, Status, Events, ShardEvents, OPCodes, WSEvents } = require('../../util/Constants');
 
 const STATUS_KEYS = Object.keys(Status);
 const CONNECTION_STATE = Object.keys(WebSocket.WebSocket);
 
 let zlib;
 
-try {
-  zlib = require('zlib-sync');
-} catch {} // eslint-disable-line no-empty
+if (!browser) {
+  try {
+    zlib = require('zlib-sync');
+  } catch {} // eslint-disable-line no-empty
+}
 
 /**
  * Represents a Shard's WebSocket connection

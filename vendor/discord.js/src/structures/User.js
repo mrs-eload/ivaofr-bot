@@ -28,6 +28,7 @@ class User extends Base {
     this.id = data.id;
 
     this.system = null;
+    this.locale = null;
     this.flags = null;
 
     this._patch(data);
@@ -78,6 +79,14 @@ class User extends Base {
        * @type {?boolean}
        */
       this.system = Boolean(data.system);
+    }
+
+    if ('locale' in data) {
+      /**
+       * The locale of the user's client (ISO 639-1)
+       * @type {?string}
+       */
+      this.locale = data.locale;
     }
 
     if ('public_flags' in data) {
@@ -278,7 +287,7 @@ class User extends Base {
 
   /**
    * Fetches this user's flags.
-   * @param {boolean} [force=false] Whether to skip the cache check and request the API
+   * @param {boolean} [force=false] Whether to skip the cache check and request the AP
    * @returns {Promise<UserFlags>}
    */
   async fetchFlags(force = false) {
@@ -290,7 +299,7 @@ class User extends Base {
 
   /**
    * Fetches this user.
-   * @param {boolean} [force=false] Whether to skip the cache check and request the API
+   * @param {boolean} [force=false] Whether to skip the cache check and request the AP
    * @returns {Promise<User>}
    */
   fetch(force = false) {
