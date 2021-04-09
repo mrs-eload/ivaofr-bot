@@ -4,6 +4,7 @@ if(!process.env.NODE_ENV){
     return
 }
 
+
 const path = require('path')
 const env_path = path.resolve(process.cwd(), 'config', process.env.NODE_ENV, '.env')
 
