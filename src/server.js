@@ -14,6 +14,7 @@ const bot = client.connect()
 //Load bot modules
 const discord_auth = require('./services/discord_auth');
 const mod_logger = require('./services/moderation_logger');
+const commands = require('./commands')(bot);
 
 bot.on('ready', async () => {
     console.log("Je suis connecté !")

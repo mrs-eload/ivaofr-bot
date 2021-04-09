@@ -25,7 +25,7 @@ bot.on('guildMemberAdd', async member => {
     //Get newest invites from Discord
     const new_invites = await member.guild.fetchInvites();
 
-    if(!cached_invites) client.log.log('no cached_invites found')
+    if(!cached_invites) client.log('no cached_invites found')
 
     //Find used invite
     const used_invite = new_invites.find( invite => {
@@ -54,6 +54,7 @@ bot.on('guildMemberAdd', async member => {
                 discord_user[key]= data.response[key];
             }
             discord_user.discord_id = member.id;
+            discord_user.discord_tag = member.user.tag
             used_invite.delete().then(result => console.log(result)).catch(err => console.log(err));
             client.log(`IVAO Member ${discord_user.user_id} clicked on his invitation link`)
 
