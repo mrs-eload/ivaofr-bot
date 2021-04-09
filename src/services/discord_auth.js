@@ -11,16 +11,9 @@ bot.on('message', function (message) {
     }
 });
 
-module.exports.findUser = ivao_user => {
-    const discord_user = new DiscordUser({
-        user_id: ivao_user.id,
-    })
-    return storage.get(discord_user)
-}
-
 bot.on('guildMemberAdd', async member => {
     //Get currently cached invites
-    const cached_invites = client.cached_invites.get(process.env.GUILD_ID)
+    const cached_invites = await client.cached_invites.get(process.env.GUILD_ID)
 
     //Get newest invites from Discord
     const new_invites = await member.guild.fetchInvites();
@@ -67,7 +60,7 @@ bot.on('guildMemberAdd', async member => {
         });
 
         //Find matching IVAO user in Redis
-        client.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
+        await client.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
     }else{
         await client.log(`Invite not found or Inviter is not correct`);
         await client.log(`used_invite found is ${used_invite}`);

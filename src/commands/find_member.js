@@ -5,7 +5,7 @@ const DiscordUser = require('../core/DiscordUser')
 module.exports = (bot) => {
 
     const VIDRegex = new RegExp(/(\d{6})/)
-    const TagRegex = new RegExp(/!member\stag\s(.{3,32}#[0-9]{4})$/)
+    const TagRegex = new RegExp(/!!member\stag\s(.{3,32}#[0-9]{4})$/)
     const IdRegex = new RegExp(/(\d+)/)
 
     const allowed_channels = (message) => (message.channel.name === 'ivaofr-logs' || message.channel.name === 'moderator-only')
@@ -47,7 +47,7 @@ module.exports = (bot) => {
         if (message.guild.id !== process.env.GUILD_ID) return;
         message.content = message.content.trim();
 
-        if (message.content.search(/^!member\svid\?{0,1}\s\d{6}$/) > -1 && allowed_channels(message)) {
+        if (message.content.search(/^!!member\svid\?{0,1}\s\d{6}$/) > -1 && allowed_channels(message)) {
             let match = VIDRegex.exec(message.content);
             if(match[1]){
                 const discord_user = new DiscordUser({
@@ -58,7 +58,7 @@ module.exports = (bot) => {
             }
         }
 
-        if (message.content.search(/^!member\stag\?{0,1}\s.{3,32}#[0-9]{4}$/) > -1 && allowed_channels(message)) {
+        if (message.content.search(/^!!member\stag\?{0,1}\s.{3,32}#[0-9]{4}$/) > -1 && allowed_channels(message)) {
             let match = TagRegex.exec(message.content);
             if(match[1]){
                 const discord_user = new DiscordUser({
@@ -69,7 +69,7 @@ module.exports = (bot) => {
             }
         }
 
-        if (message.content.search(/^!member\sid\?{0,1}\s.{3,32}#[0-9]{4}$/) > -1 && allowed_channels(message)) {
+        if (message.content.search(/^!!member\sid\?{0,1}\s.{3,32}#[0-9]{4}$/) > -1 && allowed_channels(message)) {
             let match = IdRegex.exec(message.content);
             if(match[1]){
                 const discord_user = new DiscordUser({

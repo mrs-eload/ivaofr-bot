@@ -1,7 +1,16 @@
-require('dotenv').config()
+if(!process.env.NODE_ENV){
+    console.error('No NODE_ENV provided!!')
+    process.exit(1);
+    return
+}
+
+const path = require('path')
+const env_path = path.resolve(process.cwd(), 'config', process.env.NODE_ENV, '.env')
+
+require('dotenv').config({path:env_path})
+
 const express = require('express');
 const bodyParser = require('body-parser')
-const nodefetch = require('node-fetch')
 const app = express();
 const cors = require('cors');
 

@@ -50,10 +50,6 @@ class Bot {
         return guild_id.fetchInvites();
     }
 
-    static async fetchRoles(guild_id){
-        return Bot.guild.get('roles')
-    }
-
     static async refresh_invites(){
         return Bot.guild.fetchInvites()
             .then(guildInvites => Bot.cached_invites.set(Bot.guild.id, guildInvites))
@@ -65,8 +61,9 @@ class Bot {
             Bot.is_ready = false;
             Bot.client = new Discord.Client({fetchAllMembers:true})
             Bot.client.login(process.env.BOT_TOKEN)
-                .then(res => {
+                .then(async res => {
                     Bot.guild = Bot.client.guilds.cache.get(process.env.GUILD_ID)
+                    await Bot.refresh_invites()
                     Bot.is_ready = true;
                 })
                 .catch(err => console.error(err))
@@ -104,7 +101,7 @@ class Bot {
     }
 
     /**
-     * @return {GuildManager}
+     * @return {Guild}
      */
     static get guild(){
         return Bot._guild;
