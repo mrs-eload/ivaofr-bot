@@ -24,13 +24,6 @@
 
 ```bash
 $ npm install
-$ cp ./config/.env.example ./config/development/.env
+$ cp ./config/.env.example ./config/development/.env #any env defined here will be overridden if env variable is explicitly set
 $ npm run start
-```
-
-### Docker installation
-
-```bash
-$ npm install
-$ 
 ```
