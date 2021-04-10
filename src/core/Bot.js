@@ -21,6 +21,25 @@ class Bot {
         });
     }
 
+    static async kickUser(opts, cause){
+        const member = await Bot.guild.member(opts.discord_id);
+
+        if(member){
+            return member.kick().then((member) => {
+                const message = new Discord.MessageEmbed()
+                    .setColor("#14dc1e")
+                    .setTitle(`${member.nickname} s'envole vers d'autres cieux`)
+                    .addField("Cause:", cause)
+                const channel = Bot.findChannel("ivaofr-logs")
+                channel.send(message);
+                return true
+            })
+        }else{
+            return false;
+        }
+
+    }
+
     static createInvite(opts){
         const{channel_name} = opts;
         const channel = Bot.findChannel(channel_name);

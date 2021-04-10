@@ -9,6 +9,8 @@ module.exports = (bot) => {
     const IdRegex = new RegExp(/(\d+)/)
 
     const allowed_channels = (message) => (message.channel.name === 'ivaofr-logs' || message.channel.name === 'moderator-only')
+
+
     const findUser = async (discord_user, needle) => {
         return await storage.find(discord_user)
             .then(result => result.json())

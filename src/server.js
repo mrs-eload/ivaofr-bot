@@ -41,7 +41,7 @@ app.listen(process.env.PORT || 8081)
 
 app.use('/', express.static(__dirname + '/../public'));
 
-app.post('/invite', cors({origin:'*'}), async (req,res,next) => {
+app.post('/invite', cors({origin:process.env.CORS_ORIGIN}), async (req,res,next) => {
     if(!bot.guild) client.connect();
     await client.whenReady();
     const query = req.body;
@@ -62,6 +62,29 @@ app.post('/invite', cors({origin:'*'}), async (req,res,next) => {
     }
 });
 
+app.post('/user/delete', cors({origin:process.env.CORS_ORIGIN}), async (req,res,next) => {
+    if(!bot.guild) client.connect();
+    await client.whenReady();
+    const query = req.body;
+    if(query.discord_user){
+        await client.kickUser(query.discord_user, `Supprimé du site`)
+        .then(success => res.send({ success }))
+    }else{
+        res.sendStatus(400)
+    }
+});
 
+
+app.post('/status', cors({origin:process.env.CORS_ORIGIN}), async (req,res,next) => {
+    let status = {online: false, reason: null}
+    try{
+        if(!bot.guild) client.connect();
+        await client.whenReady();
+        status = {...status,online: true}
+    }catch(err){
+        status = {...status, online: false, reason: err}
+    }
+    res.send(status)
+});
 
 
