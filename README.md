@@ -14,7 +14,8 @@
 | WEBSITE_DISCORD_API_URL | `Website API URL` |
 | WEBSITE_DISCORD_API_TOKEN | `Website API token` |
 | STORAGE | `Storage used to store Discord user data, only 'rest' value is supported for now` |
-| PORT | `Port the Discord Bot should listen to. Default: 8081` |
+| CORS_ORIGIN | `Set CORS origin policy (eg: '*.ivao.fr')` |
+| PORT (8081) | `Optional: Port the Discord Bot should listen to. Default: 8081` |
 
 
 ### Dev installation
