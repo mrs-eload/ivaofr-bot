@@ -5,12 +5,6 @@ const bot = client.connect();
 const Roles = require('./roles')()
 
 
-bot.on('message', function (message) {
-    if (message.content === 'ping') {
-        message.reply('pong !');
-    }
-});
-
 bot.on('guildMemberAdd', async member => {
     //Get currently cached invites
     const cached_invites = await client.cached_invites.get(process.env.GUILD_ID)
@@ -37,7 +31,7 @@ bot.on('guildMemberAdd', async member => {
 
         await storage.find(discord_user)
         .then(result => result.json()).catch((err) => { throw new Error(err) })
-        .then(data => {
+        .then(async data => {
             if(data.status <= 400){
                 console.error(`error with request`)
                 console.log(data);
@@ -48,7 +42,7 @@ bot.on('guildMemberAdd', async member => {
             }
             discord_user.discord_id = member.id;
             discord_user.discord_tag = member.user.tag
-            used_invite.delete().catch(err => console.log(err));
+            await used_invite.delete().catch(err => console.log(err));
             client.log(`IVAO Member ${discord_user.user_id} clicked on his invitation link`)
 
             return discord_user;
@@ -81,7 +75,7 @@ bot.on('guildMemberUpdate', async (old, member) => {
             let roles = Roles.fetchRoles(member.guild)
             await storage.find(discord_user)
                 .then(result => result.json()).catch((err) => { throw new Error(err) })
-                .then(data => {
+                .then( async data => {
                     if(data === null || data.status <= 404){
                         console.error(`error with request`)
                         console.log(data);
@@ -91,10 +85,10 @@ bot.on('guildMemberUpdate', async (old, member) => {
                         discord_user[key]= data.response[key];
                     }
 
-                    client.log(`IVAO Member ${discord_user.nickname} has accepted rules`)
+                    await client.log(`IVAO Member ${discord_user.nickname} has accepted rules`)
                     //Set member username
                     if(member.nickname !== discord_user.nickname){
-                        member.setNickname(discord_user.nickname);
+                        await member.setNickname(discord_user.nickname);
                     }
 
                     let role = roles.member_role;
@@ -102,8 +96,8 @@ bot.on('guildMemberUpdate', async (old, member) => {
                         role = roles.staff_role;
                     }
 
-                    if(!member.roles.cache.has(role.id)) member.roles.add(role);
-                    client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${role.name}`)
+                    if(!member.roles.cache.has(role.id)) await member.roles.add(role);
+                    await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${role.name}`)
                     discord_user.is_pending = false;
                     discord_user.is_active = true;
                     return discord_user;
@@ -128,5 +122,6 @@ bot.on('guildMemberRemove', async (member) => {
         if(result.status < 400){
             client.log(`Discord member with id ${discord_user.discord_id} has been removed from the website`);
         }
+        return true
     })
 });
