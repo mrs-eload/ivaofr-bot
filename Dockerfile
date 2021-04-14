@@ -7,7 +7,6 @@ RUN apk add make
 WORKDIR /app
 
 COPY package.json .
-COPY package-lock.json .
 COPY webpack.config.js .
 COPY config/ config
 COPY src/ src
