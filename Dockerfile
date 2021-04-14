@@ -3,6 +3,7 @@ RUN apk update
 RUN apk add python
 RUN apk add build-base
 RUN apk add make
+RUN apk add git
 
 WORKDIR /app
 
@@ -14,4 +15,4 @@ COPY vendor/ vendor
 
 RUN npm install --production
 
-CMD [ "node", "server.js" ]
+CMD [ "node", "src/server.js" ]
