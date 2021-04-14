@@ -5,8 +5,14 @@ RUN apk add build-base
 RUN apk add make
 
 WORKDIR /app
-COPY ["package.json", "package-lock.json*", "./config/", "./src/", "./vendor/", "webpack.config.js", "./"]
+
+COPY package.json .
+COPY package-lock.json .
+COPY webpack.config.js .
+COPY config/ config
+COPY src/ src
+COPY vendor/ vendor
+
 RUN npm install --production
-RUN npm link discord.js
 
 CMD [ "node", "server.js" ]
