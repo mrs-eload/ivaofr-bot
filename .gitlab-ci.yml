@@ -1,6 +1,7 @@
 stages:
   - build
   - deploy
+
 build:
   image: docker:20.10.6
   variables:
@@ -16,7 +17,6 @@ build:
     - docker push $CI_REGISTRY_IMAGE:latest
   rules:
     - when: manual
-  allow_failure: true
 
 deploy:
   before_script:
@@ -30,6 +30,3 @@ deploy:
   - ssh $SSH_USER@$SSH_URL "cd ivaofr-bot && docker-compose pull && docker-compose up -d && exit"
   needs:
     - build
-  rules:
-    - when: manual
-  allow_failure: true
