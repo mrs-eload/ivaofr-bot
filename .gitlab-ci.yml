@@ -26,6 +26,4 @@ deploy:
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   stage: deploy
   script:
-  - ssh $SSH_USER@$SSH_URL "exit"
-  rules:
-    - when: manual
+  - ssh $SSH_USER@$SSH_URL "cd ivaofr-bot && docker-compose pull && docker-compose up -d && exit"
