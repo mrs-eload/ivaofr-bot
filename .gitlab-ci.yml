@@ -1,8 +1,10 @@
 deploy:
-  image: docker:20.10-dind
+  image: docker:20.10.6
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
+  services:
+    - docker:20.10.6-dind
   stage: deploy
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
