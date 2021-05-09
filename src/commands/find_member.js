@@ -1,4 +1,4 @@
-const Discord = require ('discord.js');
+const Discord = require ('@ivaofr/discord.js');
 const storage = require('../store/store')(process.env.STORAGE)
 const DiscordUser = require('../core/DiscordUser')
 
