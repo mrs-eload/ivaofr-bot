@@ -7,11 +7,13 @@ RUN apk add git
 
 WORKDIR /app
 
+COPY .npmrc .
 COPY package.json .
 COPY webpack.config.js .
 COPY config/ config
 COPY src/ src
-COPY vendor/ vendor
+
+
 
 RUN npm install --production
 

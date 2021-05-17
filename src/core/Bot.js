@@ -1,4 +1,4 @@
-const Discord = require ('discord.js');
+const Discord = require ('@ivaofr/discord.js');
 const DiscordUser = require('./DiscordUser')
 class Bot {
 
