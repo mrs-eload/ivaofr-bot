@@ -91,13 +91,15 @@ bot.on('guildMemberUpdate', async (old, member) => {
                         await member.setNickname(discord_user.nickname);
                     }
 
-                    let role = roles.member_role;
+                    let to_assign = [roles.member_role];
                     if(discord_user.is_staff){
-                        role = roles.staff_role;
+                        to_assign.push(roles.staff_role);
                     }
 
-                    if(!member.roles.cache.has(role.id)) await member.roles.add(role);
-                    await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${role.name}`)
+                    await Roles.addRoles(member, to_assign)
+
+                    // if(!member.roles.cache.has(role.id)) await member.roles.add(role);
+                    await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
                     discord_user.is_pending = false;
                     discord_user.is_active = true;
                     return discord_user;
