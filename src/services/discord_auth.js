@@ -115,6 +115,15 @@ bot.on('guildMemberUpdate', async (old, member) => {
 })
 
 bot.on('guildMemberRemove', async (member) => {
+    if (!member.joinedAt){
+        await client.log('Without joinAt')
+        await client.log(member.toJSON())
+        await client.log('member.partial = ' + member.partial)
+    }else{
+        await client.log('Without joinAt')
+        await client.log(member.toJSON())
+        await client.log('member.partial = ' + member.partial)
+    }
     // redis.del(member.user.id, (err) => { if(err) throw err; });
     const discord_user = new DiscordUser({
         discord_id: member.id
