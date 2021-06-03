@@ -23,7 +23,7 @@ bot.on('guildMemberAdd', async member => {
     client.cached_invites = new_invites; //Replace invites cache list by the new list
 
     // Check invite exists and inviter is legit
-    if(used_invite && used_invite.inviter.username === 'IVAOFR'){
+    if(used_invite && used_invite.inviter.username === process.env.BOT_USERNAME){
         //Ask website for DiscordUser
         const discord_user = new DiscordUser({
             invite_code: used_invite.code
