@@ -115,23 +115,27 @@ bot.on('guildMemberUpdate', async (old, member) => {
 })
 
 bot.on('guildMemberRemove', async (member) => {
+
     if (!member.joinedAt){
         await client.log('Without joinAt')
-        await client.log(member.toJSON())
+        await client.log(`json ${member.toJSON()} \r\n string ${member.toString()}`)
         await client.log('member.partial = ' + member.partial)
     }else{
-        await client.log('Without joinAt')
-        await client.log(member.toJSON())
+        await client.log('With joinAt')
+        await client.log(`json ${member.toJSON()} \r\n string ${member.toString()}`)
         await client.log('member.partial = ' + member.partial)
     }
-    // redis.del(member.user.id, (err) => { if(err) throw err; });
+
     const discord_user = new DiscordUser({
         discord_id: member.id
     });
+
     await storage.remove(discord_user).then(result => {
         console.log(result)
         if(result.status < 400){
             client.log(`Discord member with id ${discord_user.discord_id} has been removed from the website`);
+        }else{
+            client.log(`Could not remove member from website, visits https://ivao.fr/fr/discord_users and remove member ${discord_user.discord_id}`);
         }
         return true
     })
