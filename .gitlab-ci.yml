@@ -1,0 +1,33 @@
+stages:
+  - build
+  - deploy
+
+build:
+  image: docker:20.10.6
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - docker:20.10.6-dind
+  stage: build
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
+    - docker pull $CI_REGISTRY_IMAGE:latest
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
+  rules:
+    - when: manual
+  allow_failure: false
+
+deploy:
+  before_script:
+    - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY" | base64 -d)
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  stage: deploy
+  script:
+  - ssh $SSH_USER@$SSH_URL "cd ivaofr-bot && docker-compose pull && docker-compose up -d && exit"
+  needs:
+    - build
