@@ -118,11 +118,11 @@ bot.on('guildMemberRemove', async (member) => {
 
     if (!member.joinedAt){
         await client.log('Without joinAt')
-        await client.log(`json ${member.toJSON()} \r\n string ${member.toString()}`)
+        await client.log(`json ${JSON.stringify(member)} \r\n string ${member.toString()}`)
         await client.log('member.partial = ' + member.partial)
     }else{
         await client.log('With joinAt')
-        await client.log(`json ${member.toJSON()} \r\n string ${member.toString()}`)
+        await client.log(`json ${JSON.stringify(member)} \r\n string ${member.toString()}`)
         await client.log('member.partial = ' + member.partial)
     }
 
