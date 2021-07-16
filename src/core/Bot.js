@@ -47,7 +47,7 @@ class Bot {
         if(!channel) throw new Error(`Can't find channel ${channel_name}`)
 
         return channel.createInvite({
-            temporary: true,
+            temporary: false,
             unique:true,
             maxUses:2
         });
