@@ -72,7 +72,9 @@ bot.on('guildMemberUpdate', async (old, member) => {
             const discord_user = new DiscordUser({
                 discord_id: member.id
             });
-            let roles = Roles.fetchRoles(member.guild)
+            await client.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`)
+            let roles = Roles.fetchRoles(client.guild)
+            await client.log(`Roles retrieved  ${JSON.stringify(roles)}`)
             await storage.find(discord_user)
                 .then(result => result.json()).catch((err) => { throw new Error(err) })
                 .then( async data => {
@@ -86,18 +88,23 @@ bot.on('guildMemberUpdate', async (old, member) => {
                     }
 
                     await client.log(`IVAO Member ${discord_user.nickname} has accepted rules`)
+
+                    await client.log(`Member event object's nickname: ${member.nickname}`)
+                    await client.log(`Storage member object's nickname:  ${discord_user.nickname}`)
                     //Set member username
                     if(member.nickname !== discord_user.nickname){
+                        await client.log(`Setting nickname...`)
                         await member.setNickname(discord_user.nickname);
+                        await client.log(`Nickname set to ${discord_user.nickname}`)
                     }
 
                     let to_assign = [roles.member_role];
+                    await client.log(`Is storage member staff? ${discord_user.is_staff}`)
                     if(discord_user.is_staff){
                         to_assign.push(roles.staff_role);
                     }
 
                     await Roles.addRoles(member, to_assign)
-
                     // if(!member.roles.cache.has(role.id)) await member.roles.add(role);
                     await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
                     discord_user.is_pending = false;
