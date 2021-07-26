@@ -107,6 +107,24 @@ class Bot {
         console.log(message);
     }
 
+    static async findDiscordUser (params){
+        const discord_user = new DiscordUser(params)
+        return await this.storage.find(discord_user)
+            .then (result => result.json())
+            .catch(err => { throw new Error(err) })
+            .then (data => {
+                if (data === null || data.status <= 404) {
+                    console.error(`error with request`)
+                    console.log(data)
+                    throw new Error(`error with request`)
+                }
+                for (let key in data.response) {
+                    discord_user[key] = data.response[key]
+                }
+                return discord_user;
+            })
+    }
+
     static set client(val){
         Bot._client = val;
     }

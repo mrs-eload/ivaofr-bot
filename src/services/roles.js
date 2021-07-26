@@ -15,10 +15,10 @@ module.exports = () => {
     const addRoles = async (member, roles) => {
 
         let promises = []
-        roles.forEach( role => {
-            if(!member.roles.cache.has(role.id)) promises.push(member.roles.add(role));
+        roles.forEach(role => {
+            if (!member.roles.cache.has(role.id)) promises.push(member.roles.add(role));
         })
-       return Promise.all(promises)
+        return Promise.all(promises)
     }
 
     return {

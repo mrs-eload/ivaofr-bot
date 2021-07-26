@@ -37,6 +37,17 @@ class DiscordUser{
         })
     }
 
+    expectedRoles(roles){
+        let res = [];
+        if (this.is_active) {
+            res.push(roles.member_role);
+        }
+        if (this.is_staff) {
+            res.push(roles.staff_role)
+        }
+        return res;
+    }
+
 }
 
 module.exports = DiscordUser;
