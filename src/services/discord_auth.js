@@ -57,9 +57,6 @@ bot.on('guildMemberUpdate', async (old, member) => {
         //detect rules acceptations
         let active_screening = await member.guild.fetchMembershipScreening()
         if(active_screening.enabled && old.pending === true && member.pending === false){
-            await client.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`)
-            let roles = Roles.fetchRoles(client.guild)
-            await client.log(`Roles retrieved  ${JSON.stringify(roles)}`)
             await client.findDiscordUser({discord_id: member.user.id})
                 .then( async discord_user => {
                     await client.log(`IVAO Member ${discord_user.nickname} has accepted rules`)
@@ -72,18 +69,20 @@ bot.on('guildMemberUpdate', async (old, member) => {
                         await member.setNickname(discord_user.nickname);
                         await client.log(`Nickname set to ${discord_user.nickname}`)
                     }
-
-                    let to_assign = [roles.member_role];
-                    await client.log(`Is storage member staff? ${discord_user.is_staff}`)
-                    if(discord_user.is_staff){
-                        to_assign.push(roles.staff_role);
-                    }
-
-                    await Roles.addRoles(member, to_assign)
-                    // if(!member.roles.cache.has(role.id)) await member.roles.add(role);
-                    await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
                     discord_user.is_pending = false;
                     discord_user.is_active = true;
+                    return discord_user;
+                })
+                .then( async discord_user => {
+                    await client.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`)
+                    let roles = Roles.fetchRoles(client.guild)
+                    let to_assign = discord_user.expectedRoles(roles);
+                    await client.log(`Roles retrieved  ${JSON.stringify(roles)}`)
+
+                    await Roles.addRoles(member, to_assign);
+
+                    await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
+
                     return discord_user;
                 })
                 .then (discord_user => storage.update(discord_user))
