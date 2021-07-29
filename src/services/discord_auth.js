@@ -95,7 +95,7 @@ bot.on('guildMemberUpdate', async (old, member) => {
                     if(member.nickname !== discord_user.nickname){
                         await client.log(`Setting nickname...`)
                         await member.setNickname(discord_user.nickname);
-                        await client.log(`Nickname set to ${discord_user.nickname}`)
+                        console.log(`Nickname set to ${discord_user.nickname}`)
                     }
 
                     let to_assign = [roles.member_role];
