@@ -25,33 +25,21 @@ bot.on('guildMemberAdd', async member => {
     // Check invite exists and inviter is legit
     if(used_invite && used_invite.inviter.username === process.env.BOT_USERNAME){
         //Ask website for DiscordUser
-        const discord_user = new DiscordUser({
-            invite_code: used_invite.code
-        });
+        await client.findDiscordUser({invite_code: used_invite.code})
+            .then( async discord_user => {
+                discord_user.discord_id = member.id;
+                discord_user.discord_tag = member.user.tag
 
-        await storage.find(discord_user)
-        .then(result => result.json()).catch((err) => { throw new Error(err) })
-        .then(async data => {
-            if(data.status <= 400){
-                console.error(`error with request`)
-                console.log(data);
-                throw new Error(`error with request`);
-            }
-            for(let key in data.response){
-                discord_user[key]= data.response[key];
-            }
-            discord_user.discord_id = member.id;
-            discord_user.discord_tag = member.user.tag
-            await used_invite.delete().catch(err => console.log(err));
-            client.log(`IVAO Member ${discord_user.user_id} clicked on his invitation link`)
+                await used_invite.delete().catch(err => console.log(err));
 
-            return discord_user;
+                client.log(`IVAO Member ${discord_user.user_id} clicked on his invitation link`)
 
-        })
-        .then (discord_user => storage.update(discord_user))
-        .catch((err) => {
-            console.error(err)
-        });
+                return discord_user;
+            })
+            .then (discord_user => storage.update(discord_user))
+            .catch((err) => {
+                console.error(err)
+            });
 
         //Find matching IVAO user in Redis
         await client.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
@@ -69,26 +57,8 @@ bot.on('guildMemberUpdate', async (old, member) => {
         //detect rules acceptations
         let active_screening = await member.guild.fetchMembershipScreening()
         if(active_screening.enabled && old.pending === true && member.pending === false){
-            const discord_user = new DiscordUser({
-                discord_id: member.id
-            });
-            await client.log('Fetching roles...');
-            console.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`);
-            let roles = Roles.fetchRoles(client.guild);
-            await client.log('Roles retrieved');
-            console.log(`Roles retrieved  ${JSON.stringify(roles)}`);
-            await storage.find(discord_user)
-                .then(result => result.json()).catch((err) => { throw new Error(err) })
-                .then( async data => {
-                    if(data === null || data.status <= 404){
-                        console.error(`error with request`)
-                        console.log(data);
-                        throw new Error(`error with request`);
-                    }
-                    for(let key in data.response){
-                        discord_user[key]= data.response[key];
-                    }
-
+            await client.findDiscordUser({discord_id: member.user.id})
+                .then( async discord_user => {
                     await client.log(`IVAO Member ${discord_user.nickname} has accepted rules`)
 
                     await client.log(`Member event object's nickname: ${member.nickname}`)
@@ -99,18 +69,20 @@ bot.on('guildMemberUpdate', async (old, member) => {
                         await member.setNickname(discord_user.nickname);
                         await client.log(`Nickname set to ${discord_user.nickname}`)
                     }
-
-                    let to_assign = [roles.member_role];
-                    await client.log(`Is storage member staff? ${discord_user.is_staff}`)
-                    if(discord_user.is_staff){
-                        to_assign.push(roles.staff_role);
-                    }
-
-                    await Roles.addRoles(member, to_assign)
-                    // if(!member.roles.cache.has(role.id)) await member.roles.add(role);
-                    await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
                     discord_user.is_pending = false;
                     discord_user.is_active = true;
+                    return discord_user;
+                })
+                .then( async discord_user => {
+                    await client.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`)
+                    let roles = Roles.fetchRoles(client.guild)
+                    let to_assign = discord_user.expectedRoles(roles);
+                    await client.log(`Roles retrieved  ${JSON.stringify(roles)}`)
+
+                    await Roles.addRoles(member, to_assign);
+
+                    await client.log(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
+
                     return discord_user;
                 })
                 .then (discord_user => storage.update(discord_user))
