@@ -1,7 +1,7 @@
 class DiscordUser{
 
     constructor(opts){
-        const { discord_id, user_id, nickname, discord_tag, invite_code, invite_url, is_pending, is_active, is_staff, is_animator } = opts
+        const { discord_id, user_id, nickname, discord_tag, invite_code, invite_url, is_pending, is_active, other_roles } = opts
         this.discord_id = discord_id
         this.user_id = user_id
         this.nickname = nickname;
@@ -10,8 +10,7 @@ class DiscordUser{
         this.invite_url = invite_url;
         this.is_pending = is_pending;
         this.is_active = is_active;
-        this.is_staff = is_staff;
-        this.is_animator = is_animator;
+        this.other_roles = other_roles;
     }
 
     setActive (is_active){
@@ -33,17 +32,18 @@ class DiscordUser{
             invite_code: this.invite_code,
             invite_url: this.invite_url,
             is_pending: this.is_pending,
-            is_active: this.is_active
+            is_active: this.is_active,
+            other_roles: this.other_roles
         })
     }
 
     expectedRoles(roles){
         let res = [];
-        if (this.is_active) {
-            res.push(roles.member_role);
-        }
-        if (this.is_staff) {
-            res.push(roles.staff_role)
+        this.other_roles.forEach(role => {
+            res.push(roles[`${role}_role`]);
+        });
+        if (this.is_active === true) {
+            res.push(roles.member_role)
         }
         return res;
     }
