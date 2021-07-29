@@ -101,7 +101,7 @@ class Bot {
         console.log(message);
         const log_chan = Bot.findChannel("ivaofr-logs")
         if(log_chan){
-            log_chan.send(message);
+            log_chan.send(message, {split: true});
         }else{
             console.warn('No ivaofr-logs channel setup!');
         }
