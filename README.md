@@ -7,8 +7,9 @@
 
 | Variable | Value |
 |---|---|
-| NODE_ENV | `production|development` |
+| NODE_ENV | `'production', 'development'` |
 | BOT_TOKEN | `Bot authentication token provided by Discord`   |
+| BOT_USERNAME | `Bot username` |
 | GUILD_ID | `Guild ID, server ID` |
 | INVITE_CHANNEL | `Channel members will be invited to` |
 | WEBSITE_DISCORD_API_URL | `Website API URL` |
