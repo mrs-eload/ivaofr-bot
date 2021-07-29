@@ -72,9 +72,11 @@ bot.on('guildMemberUpdate', async (old, member) => {
             const discord_user = new DiscordUser({
                 discord_id: member.id
             });
-            await client.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`)
-            let roles = Roles.fetchRoles(client.guild)
-            await client.log(`Roles retrieved  ${JSON.stringify(roles)}`)
+            await client.log('Fetching roles...');
+            console.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`);
+            let roles = Roles.fetchRoles(client.guild);
+            await client.log('Roles retrieved');
+            console.log(`Roles retrieved  ${JSON.stringify(roles)}`);
             await storage.find(discord_user)
                 .then(result => result.json()).catch((err) => { throw new Error(err) })
                 .then( async data => {
@@ -95,7 +97,7 @@ bot.on('guildMemberUpdate', async (old, member) => {
                     if(member.nickname !== discord_user.nickname){
                         await client.log(`Setting nickname...`)
                         await member.setNickname(discord_user.nickname);
-                        console.log(`Nickname set to ${discord_user.nickname}`)
+                        await client.log(`Nickname set to ${discord_user.nickname}`)
                     }
 
                     let to_assign = [roles.member_role];
