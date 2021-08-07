@@ -11,8 +11,7 @@ module.exports = () => {
             member_role: guild.roles.cache.find(role => role.name === 'membre'),
             va_role: guild.roles.cache.find(role => role.name === 'va'),
             fo_role: guild.roles.cache.find(role => role.name === 'fo'),
-            wm_role: guild.roles.cache.find(role => role.name === 'wm'),
-            admin_role: guild.roles.cache.find(role => role.name === 'admin')
+            wm_role: guild.roles.cache.find(role => role.name === 'wm')
         }
     }
 
@@ -25,8 +24,18 @@ module.exports = () => {
         return Promise.all(promises)
     }
 
+    const removeRoles = async (member, roles) => {
+
+        let promises = []
+        roles.forEach(role => {
+            if (member.roles.cache.has(role.id)) promises.push(member.roles.remove(role));
+        })
+        return Promise.all(promises)
+    }
+
     return {
         fetchRoles,
-        addRoles
+        addRoles,
+        removeRoles
     }
 }

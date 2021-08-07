@@ -108,11 +108,13 @@ app.post('/users/sync', cors({origin:process.env.CORS_ORIGIN}), async (req,res,n
                         }
                         const roles = Roles.fetchRoles(client.guild);
                         const expectedRoles = discord_user.expectedRoles(roles);
-                        if (member.roles.cache.find(r => r.name === 'admin')) {
-                            expectedRoles.push(roles.admin_role);
-                        }
+                        const expectedRolesNames = expectedRoles.map(r => r.name);
+                        const rolesToRemove = member.roles.cache.filter(r => {
+                            return r.name !== 'admin' && !expectedRolesNames.includes(r.name);
+                        });
 
-                        await member.roles.set(expectedRoles).then(status => promises.push(status));
+                        await Roles.addRoles(member, expectedRoles).then(status => promises.push(status));
+                        await Roles.removeRoles(member, rolesToRemove).then(status => promises.push(status));
                     } else {
                         // Pending status do not match
                         await member.send("Un problème de statuts a été détecté sur votre compte. Vous avez donc été retiré du serveur Discord de la division France.\nPour avoir de nouveau accès au serveur, utilisez le lien présent sur la page d'accuil du site de la division : https://www.ivao.fr").then(status => promises.push(status));
