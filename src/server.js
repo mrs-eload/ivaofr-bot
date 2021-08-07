@@ -106,8 +106,11 @@ app.post('/users/sync', cors({origin:process.env.CORS_ORIGIN}), async (req,res,n
                             })
                                 .catch(err => console.log(err));
                         }
-
-                        const expectedRoles = discord_user.expectedRoles(Roles.fetchRoles(client.guild));
+                        const roles = Roles.fetchRoles(client.guild);
+                        const expectedRoles = discord_user.expectedRoles(roles);
+                        if (member.roles.cache.find(r => r.name === 'admin')) {
+                            expectedRoles.push(roles.admin_role);
+                        }
 
                         await member.roles.set(expectedRoles).then(status => promises.push(status));
                     } else {

@@ -11,7 +11,8 @@ module.exports = () => {
             member_role: guild.roles.cache.find(role => role.name === 'membre'),
             va_role: guild.roles.cache.find(role => role.name === 'va'),
             fo_role: guild.roles.cache.find(role => role.name === 'fo'),
-            wm_role: guild.roles.cache.find(role => role.name === 'wm')
+            wm_role: guild.roles.cache.find(role => role.name === 'wm'),
+            admin_role: guild.roles.cache.find(role => role.name === 'admin')
         }
     }
 

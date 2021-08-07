@@ -77,6 +77,9 @@ bot.on('guildMemberUpdate', async (old, member) => {
                     await client.log(`Fetching roles for Guild ${JSON.stringify(client.guild)}`)
                     let roles = Roles.fetchRoles(client.guild)
                     let to_assign = discord_user.expectedRoles(roles);
+                    if (member.roles.cache.find(r => r.name === 'admin')) {
+                        to_assign.push(roles.admin_role)
+                    }
                     await client.log(`Roles retrieved  ${JSON.stringify(roles)}`)
 
                     await Roles.addRoles(member, to_assign);
