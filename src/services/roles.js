@@ -24,8 +24,18 @@ module.exports = () => {
         return Promise.all(promises)
     }
 
+    const removeRoles = async (member, roles) => {
+
+        let promises = []
+        roles.forEach(role => {
+            if (member.roles.cache.has(role.id)) promises.push(member.roles.remove(role));
+        })
+        return Promise.all(promises)
+    }
+
     return {
         fetchRoles,
-        addRoles
+        addRoles,
+        removeRoles
     }
 }
