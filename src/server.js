@@ -27,6 +27,7 @@ const Roles = require('./services/roles')()
 const discord_auth = require('./services/discord_auth');
 const mod_logger = require('./services/moderation_logger');
 const commands = require('./commands')(bot);
+const text_channels = require('./services/text_channels');
 
 bot.on('ready', async () => {
     console.log("Je suis connecté !")
@@ -110,7 +111,7 @@ app.post('/users/sync', cors({origin:process.env.CORS_ORIGIN}), async (req,res,n
                         const expectedRoles = discord_user.expectedRoles(roles);
                         const expectedRolesNames = expectedRoles.map(r => r.name);
                         const rolesToRemove = member.roles.cache.filter(r => {
-                            return r.name !== 'admin' && !expectedRolesNames.includes(r.name);
+                            return r.name !== '@everyone' && r.name !== 'admin' && !expectedRolesNames.includes(r.name);
                         });
 
                         await Roles.addRoles(member, expectedRoles).then(status => promises.push(status));

@@ -1,4 +1,4 @@
-const Discord = require ('@ivaofr/discord.js');
+const Discord = require ('discord.js');
 const storage = require('../store/store')(process.env.STORAGE)
 const DiscordUser = require('../core/DiscordUser')
 
@@ -45,7 +45,7 @@ module.exports = (bot) => {
             })
     }
 
-    bot.on('message', async (message) => {
+    bot.on('messageCreate', async (message) => {
         if (message.guild.id !== process.env.GUILD_ID) return;
         message.content = message.content.trim();
 
@@ -56,7 +56,7 @@ module.exports = (bot) => {
                     user_id: parseInt(match[1])
                 })
                 const response = await findUser(discord_user, match[1]);
-                message.channel.send(response)
+                message.channel.send({ embeds: [response] });
             }
         }
 
@@ -67,7 +67,7 @@ module.exports = (bot) => {
                     discord_tag: match[1]
                 })
                 const response = await findUser(discord_user, match[1]);
-                message.channel.send(response)
+                message.channel.send({ embeds: [response] })
             }
         }
 
@@ -78,7 +78,7 @@ module.exports = (bot) => {
                     discord_id: match[1]
                 })
                 const response = await findUser(discord_user, match[1]);
-                message.channel.send(response)
+                message.channel.send({ embeds: [response] })
             }
         }
     });

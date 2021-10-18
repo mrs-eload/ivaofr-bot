@@ -10,7 +10,7 @@ bot.on('guildMemberAdd', async member => {
     const cached_invites = await client.cached_invites.get(process.env.GUILD_ID)
 
     //Get newest invites from Discord
-    const new_invites = await member.guild.fetchInvites();
+    const new_invites = await member.guild.invites.fetch();
 
     if(!cached_invites) client.log('no cached_invites found')
 
@@ -53,10 +53,20 @@ bot.on('guildMemberAdd', async member => {
 
 bot.on('guildMemberUpdate', async (old, member) => {
     try{
+
+        // TEST
+        if(!cached_invites) client.log('no cached_invites found')
+
+        //Find used invite
+        const used_invite = new_invites.find( invite => {
+            let cinvite = cached_invites.get(invite.code);
+            return cinvite && cinvite.uses < invite.uses;
+        });
+        // TEST
+
         const is_active = (old.pending === false && member.pending === false)
         //detect rules acceptations
-        let active_screening = await member.guild.fetchMembershipScreening()
-        if(active_screening.enabled && old.pending === true && member.pending === false){
+        if(old.pending === true && member.pending === false){
             await client.findDiscordUser({discord_id: member.user.id})
                 .then( async discord_user => {
                     await client.log(`IVAO Member ${discord_user.nickname} has accepted rules`)

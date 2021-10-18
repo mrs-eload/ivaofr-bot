@@ -1,4 +1,4 @@
-const Discord = require ('@ivaofr/discord.js');
+const Discord = require ('discord.js');
 const DiscordUser = require('./DiscordUser')
 class Bot {
 
@@ -22,7 +22,7 @@ class Bot {
     }
 
     static async kickUser(opts, cause){
-        const member = await Bot.guild.member(opts.discord_id);
+        const member = await Bot.guild.members.cache.get(opts.discord_id);
 
         if(member){
             return member.kick().then((member) => {
@@ -31,7 +31,7 @@ class Bot {
                     .setTitle(`${member.nickname} s'envole vers d'autres cieux`)
                     .addField("Cause:", cause)
                 const channel = Bot.findChannel("ivaofr-logs")
-                channel.send(message);
+                channel.send({ embeds: [message] });
                 return true
             })
         }else{
@@ -66,11 +66,11 @@ class Bot {
     }
 
     static async fetchInvites(guild_id){
-        return guild_id.fetchInvites();
+        return guild_id.invites.fetch();
     }
 
     static async refresh_invites(){
-        return Bot.guild.fetchInvites()
+        return Bot.guild.invites.fetch()
             .then(guildInvites => Bot.cached_invites.set(Bot.guild.id, guildInvites))
             .catch(err => console.log(err))
     }
@@ -78,7 +78,10 @@ class Bot {
     static connect (){
         if(!Bot.client){
             Bot.is_ready = false;
-            Bot.client = new Discord.Client({fetchAllMembers:true})
+            Bot.client = new Discord.Client({
+                intents: ['GUILD_MEMBERS', 'DIRECT_MESSAGES', 'GUILD_INVITES', 'GUILDS', 'GUILD_MESSAGES'],
+                fetchAllMembers: true
+            })
             Bot.client.login(process.env.BOT_TOKEN)
                 .then(async res => {
                     Bot.guild = Bot.client.guilds.cache.get(process.env.GUILD_ID)
@@ -101,7 +104,7 @@ class Bot {
         console.log(message);
         const log_chan = Bot.findChannel("ivaofr-logs")
         if(log_chan){
-            log_chan.send(message);
+            log_chan.send(message.toString());
         }else{
             console.warn('No ivaofr-logs channel setup!');
         }

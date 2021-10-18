@@ -1,6 +1,6 @@
 # IVAOFR Discord Bot
 ### Requirements
-- NodeJS >=14.x
+- NodeJS >=16.6
 ## Installation
 
 ### Environment variables (required)
