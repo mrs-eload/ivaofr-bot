@@ -48,7 +48,7 @@ export const checkChannels = async () => {
 }
 
 export const voiceChannelNameToTxt = (channel_name) => {
-  return `${channel_name.replace(' ', '-').toLowerCase()}-texte`;
+  return `${channel_name.replace(/\s+/g, '-').replace(/'|"/g, '').toLowerCase()}-texte`;
 }
 
 export const text_to_voice = async () => {
