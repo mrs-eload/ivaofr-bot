@@ -89,10 +89,10 @@ export const init = async () => {
             return discord_user;
           })
           .then(async discord_user => {
-            await Bot.log(`Fetching roles for Guild ${JSON.stringify(Bot.guild)}`)
+            await Bot.log(`Fetching roles...`)
             let roles = Roles.fetchRoles(Bot.guild)
             let to_assign = discord_user.expectedRoles(roles);
-            await Bot.log(`Roles retrieved  ${JSON.stringify(roles)}`)
+            await Bot.log(`Roles retrieved.`)
 
             await Roles.addRoles(member, to_assign);
 
