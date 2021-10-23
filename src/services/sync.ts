@@ -19,23 +19,26 @@ export const syncUsers = async (users) => {
 
           // Check discord member elements
 
-          if (discord_user.is_active && discord_user.nickname !== member.nickname) {
-            await member.setNickname(discord_user.nickname)
-              .then(status => {
-                promises.push(status);
-                Bot.log(`[Auto Sync] Nickname of member ${discord_user.user_id} successfully updated to : "${discord_user.nickname}".`);
-              })
-              .catch(err => console.log(err));
-          }
-          const roles = Roles.fetchRoles(Bot.guild);
-          const expectedRoles = discord_user.expectedRoles(roles);
-          const expectedRolesNames = expectedRoles.map(r => r.name);
-          const rolesToRemove = member.roles.cache.filter(r => {
-            return r.name !== '@everyone' && r.name !== 'admin' && !expectedRolesNames.includes(r.name);
-          });
+          if (discord_user.is_active) {
+            if (discord_user.nickname !== member.nickname) {
+              await member.setNickname(discord_user.nickname)
+                .then(status => {
+                  promises.push(status);
+                  Bot.log(`[Auto Sync] Nickname of member ${discord_user.user_id} successfully updated to : "${discord_user.nickname}".`);
+                })
+                .catch(err => console.log(err));
+            }
 
-          await Roles.addRoles(member, expectedRoles).then(status => promises.push(status));
-          await Roles.removeRoles(member, rolesToRemove).then(status => promises.push(status));
+            const roles = Roles.fetchRoles(Bot.guild);
+            const expectedRoles = discord_user.expectedRoles(roles);
+            const expectedRolesNames = expectedRoles.map(r => r.name);
+            const rolesToRemove = member.roles.cache.filter(r => {
+                return r.name !== '@everyone' && r.name !== 'admin' && !expectedRolesNames.includes(r.name);
+            });
+
+            await Roles.addRoles(member, expectedRoles).then(status => promises.push(status));
+            await Roles.removeRoles(member, rolesToRemove).then(status => promises.push(status));
+          }
         } else {
           // Pending status do not match
           await member.send("Un problème de statuts a été détecté sur votre compte. Vous avez donc été retiré du serveur Discord de la division France.\nPour avoir de nouveau accès au serveur, utilisez le lien présent sur la page d'accuil du site de la division : https://www.ivao.fr").then(status => promises.push(status));
