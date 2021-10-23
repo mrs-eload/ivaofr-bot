@@ -1,8 +1,10 @@
-const Discord = require ('discord.js');
-const storage = require('../store/store')(process.env.STORAGE)
-const DiscordUser = require('../core/DiscordUser')
+import * as store from "../store"
+import { MessageEmbed } from 'discord.js'
+import { DiscordUser } from "../core";
 
-module.exports = (bot) => {
+const storage = store.get(process.env.STORAGE)
+
+export const find_member_cmd = (bot) => {
 
     const VIDRegex = new RegExp(/(\d{6})/)
     const TagRegex = new RegExp(/!!member\stag\s(.{3,32}#[0-9]{4})$/)
@@ -29,7 +31,7 @@ module.exports = (bot) => {
                 return discord_user;
             })
             .then(discord_user => {
-                return new Discord.MessageEmbed()
+                return new MessageEmbed()
                     .setColor("#14dc1e")
                     .setTitle("Makemake a trouvé quelque chose!")
                     .addField("VID:", `${discord_user.user_id}`)
@@ -38,7 +40,7 @@ module.exports = (bot) => {
                     .addField("Pseudo:", `${discord_user.nickname}`)
                     .addField("A accepté les règles?", `${(discord_user.is_active) ? 'Oui': 'Non'}`)
             }).catch(err => {
-                return new Discord.MessageEmbed()
+                return new MessageEmbed()
                     .setColor("#DC143C")
                     .setTitle("Makemake a eu des problèmes!")
                     .addField(`Erreur`, `${err.message}`)

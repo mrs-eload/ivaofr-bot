@@ -1,0 +1,113 @@
+import { text_to_voice } from "./services/text_channels";
+
+if (!process.env.NODE_ENV) {
+  console.error('No NODE_ENV provided!!')
+  process.exit(1);
+}
+process.env.STORAGE = 'rest'
+
+import * as path from 'path'
+import * as dotenv from "dotenv"
+import * as express from "express"
+import * as bodyParser from "body-parser"
+import * as cors from "cors"
+
+const env_path = path.resolve(process.cwd(), 'config', process.env.NODE_ENV, '.env')
+dotenv.config({path: env_path})
+
+
+import * as store from "./store"
+
+
+import { Bot } from "./core/Bot"
+
+//Load bot modules
+import {init as discord_auth} from "./services/discord_auth"
+import {init as mod_logger } from "./services/moderation_logger"
+import {syncUsers} from "./services/sync";
+import {bootstrap as commands} from "./commands"
+
+
+
+
+const bootstrap = async () => {
+
+  const app = express();
+// Choose storage method for bot data
+  console.log(`Bot is starting...`)
+  const storage = store.get(process.env.STORAGE)
+  const client = Bot.storageSetup(storage);
+  const bot = await client.connect();
+  await discord_auth()
+  await mod_logger()
+  await text_to_voice()
+  commands(bot)
+  console.log(`Bot ready`)
+
+
+  app.use(bodyParser.urlencoded({extended: true}))
+  app.use(bodyParser.json())
+  app.use(cors());
+  app.listen(process.env.PORT || 8081)
+  console.log(`Discord Bot API ready`)
+
+  app.post('/invite', cors({origin: process.env.CORS_ORIGIN}), async (req, res, next) => {
+    if (!Bot.guild) await client.connect();
+    const query = req.body;
+    const ivao_member = query.user;
+    let inv = {invite: undefined, ivao_member: undefined};
+    if (ivao_member) {
+      client.createInvite({
+        channel_name: process.env.INVITE_CHANNEL
+      })
+        .then((invite) => {
+          inv = {invite, ivao_member}
+          client.saveInvite(inv).then((discord_user) => {
+            res.send(discord_user)
+          }).catch((err) => res.send(err))
+        });
+    } else {
+      res.sendStatus(400);
+    }
+  });
+
+  app.post('/user/delete', cors({origin: process.env.CORS_ORIGIN}), async (req, res, next) => {
+    if (!Bot.guild) await client.connect();
+    await client.whenReady();
+    const query = req.body;
+    if (query.discord_user) {
+      await client.kickUser(query.discord_user, `Supprimé du site`)
+        .then(success => res.send({success}))
+    } else {
+      res.sendStatus(400)
+    }
+  });
+
+  app.post('/users/sync', cors({origin:process.env.CORS_ORIGIN}), async (req,res,next) => {
+    if(!Bot.guild) await client.connect();
+    await client.whenReady();
+    const query = req.body;
+    const users = query.discord_users;
+    if (users) {
+      const status = await syncUsers(users)
+      res.send(status)
+    } else {
+      res.sendStatus(400)
+    }
+  });
+
+  app.post('/status', cors({origin: process.env.CORS_ORIGIN}), async (req, res, next) => {
+    let status = {online: false, reason: null}
+    try {
+      if (!Bot.guild) await client.connect();
+      status = {...status, online: true}
+    } catch (err) {
+      status = {...status, online: false, reason: err}
+    }
+    res.send(status)
+  });
+
+
+}
+
+bootstrap()

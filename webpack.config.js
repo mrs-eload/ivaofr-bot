@@ -223,7 +223,7 @@ if(process.env.NODE_ENV === 'production'){
 module.exports = configs;
 //
 // module.exports = {
-//     entry: "./src/index.js",
+//     entry: "./src/index.ts",
 //     output: debug ? {
 //     path: __dirname + "/../public/",
 //             filename: `${filename}.js`,
