@@ -1,20 +1,16 @@
-FROM node:15.14.0-alpine
+FROM node:16.6.1-alpine
 RUN apk update
-RUN apk add python
 RUN apk add build-base
 RUN apk add make
-RUN apk add git
 
-WORKDIR /app
-
-COPY .npmrc .
 COPY package.json .
-COPY webpack.config.js .
+COPY tsconfig.json .
+COPY tsconfig.build.json .
 COPY config/ config
 COPY src/ src
 
+RUN npm install
 
+RUN npm run ts:build
 
-RUN npm install --production
-
-CMD [ "node", "src/server.js" ]
+CMD [ "node", "dist/server.js" ]
