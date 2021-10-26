@@ -25,9 +25,7 @@ import { Bot } from "./core/Bot"
 import {init as discord_auth} from "./services/discord_auth"
 import {init as mod_logger } from "./services/moderation_logger"
 import {syncUsers} from "./services/sync";
-import {bootstrap as commands} from "./commands"
-
-
+import { command_register, command_reply } from "./commands"
 
 
 const bootstrap = async () => {
@@ -41,7 +39,8 @@ const bootstrap = async () => {
   await discord_auth()
   await mod_logger()
   await text_to_voice()
-  commands(bot)
+  await command_register()
+  await command_reply(bot)
   console.log(`Bot ready`)
 
 
@@ -52,17 +51,17 @@ const bootstrap = async () => {
   console.log(`Discord Bot API ready`)
 
   app.post('/invite', cors({origin: process.env.CORS_ORIGIN}), async (req, res, next) => {
-    if (!Bot.guild) await client.connect();
+    if (!Bot.guild) await Bot.connect();
     const query = req.body;
     const ivao_member = query.user;
     let inv = {invite: undefined, ivao_member: undefined};
     if (ivao_member) {
-      client.createInvite({
+      Bot.createInvite({
         channel_name: process.env.INVITE_CHANNEL
       })
         .then((invite) => {
           inv = {invite, ivao_member}
-          client.saveInvite(inv).then((discord_user) => {
+          Bot.saveInvite(inv).then((discord_user) => {
             res.send(discord_user)
           }).catch((err) => res.send(err))
         });
@@ -72,11 +71,11 @@ const bootstrap = async () => {
   });
 
   app.post('/user/delete', cors({origin: process.env.CORS_ORIGIN}), async (req, res, next) => {
-    if (!Bot.guild) await client.connect();
-    await client.whenReady();
+    if (!Bot.guild) await Bot.connect();
+    await Bot.whenReady();
     const query = req.body;
     if (query.discord_user) {
-      await client.kickUser(query.discord_user, `Supprimé du site`)
+      await Bot.kickUser(query.discord_user, `Supprimé du site`)
         .then(success => res.send({success}))
     } else {
       res.sendStatus(400)
@@ -84,8 +83,8 @@ const bootstrap = async () => {
   });
 
   app.post('/users/sync', cors({origin:process.env.CORS_ORIGIN}), async (req,res,next) => {
-    if(!Bot.guild) await client.connect();
-    await client.whenReady();
+    if(!Bot.guild) await Bot.connect();
+    await Bot.whenReady();
     const query = req.body;
     const users = query.discord_users;
     if (users) {
@@ -99,7 +98,7 @@ const bootstrap = async () => {
   app.post('/status', cors({origin: process.env.CORS_ORIGIN}), async (req, res, next) => {
     let status = {online: false, reason: null}
     try {
-      if (!Bot.guild) await client.connect();
+      if (!Bot.guild) await Bot.connect();
       status = {...status, online: true}
     } catch (err) {
       status = {...status, online: false, reason: err}
