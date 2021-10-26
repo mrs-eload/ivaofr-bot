@@ -9,56 +9,61 @@ import { server_info_cmd } from "./server_info";
 export * from './find_member'
 
 export const command_register = async () => {
-  const commands = [
-    new SlashCommandBuilder().setName('ping')
-      .setDescription('Replies with pong!')
-      .setDefaultPermission(false),
-    new SlashCommandBuilder().setName('server')
-      .setDescription('Afficher les informations du serveur')
-      .setDefaultPermission(false),
-    new SlashCommandBuilder().setName('user')
-      .setDescription('user [vid]')
-      .setDefaultPermission(false)
-      .addNumberOption(option => option.setName('vid').setDescription('Chercher par VID'))
-      .addNumberOption(option => option.setName('discord_id').setDescription('Chercher par Discord ID'))
-  ].map(command => command.toJSON());
 
   const client_id = process.env.CLIENT_ID;
   const guild_id = process.env.GUILD_ID;
-  let registered_commands = null;
-  const rest = new REST({version: '9'}).setToken(process.env.BOT_TOKEN);
-  try {
-    console.log('Started refreshing application (/) commands.');
-    await rest.put(
-      Routes.applicationGuildCommands(client_id, guild_id),
-      {body: commands},
-    ).then(commands => {
-      registered_commands = commands;
-    });
-    console.log('Successfully reloaded application (/) commands.');
-  } catch (error) {
-    console.error(error);
-  }
 
-  const roles = fetchRoles(Bot.guild)
-  const global_permissions = []
+  if(client_id && guild_id){
+    const commands = [
+      new SlashCommandBuilder().setName('ping')
+        .setDescription('Replies with pong!')
+        .setDefaultPermission(false),
+      new SlashCommandBuilder().setName('server')
+        .setDescription('Afficher les informations du serveur')
+        .setDefaultPermission(false),
+      new SlashCommandBuilder().setName('user')
+        .setDescription('user [vid]')
+        .setDefaultPermission(false)
+        .addNumberOption(option => option.setName('vid').setDescription('Chercher par VID'))
+        .addNumberOption(option => option.setName('discord_id').setDescription('Chercher par Discord ID'))
+    ].map(command => command.toJSON());
 
-  for (const command of registered_commands) {
-    global_permissions.push({
-      id: command.id,
-      permissions: [{
-        id: roles.staff_role.id,
-        type: 'ROLE',
-        permission: true,
-      }]
+    let registered_commands = null;
+    const rest = new REST({version: '9'}).setToken(process.env.BOT_TOKEN);
+    try {
+      console.log('Started refreshing application (/) commands.');
+      await rest.put(
+        Routes.applicationGuildCommands(client_id, guild_id),
+        {body: commands},
+      ).then(commands => {
+        registered_commands = commands;
+      });
+      console.log('Successfully reloaded application (/) commands.');
+    } catch (error) {
+      console.error(error);
+    }
+
+    const roles = fetchRoles(Bot.guild)
+    const global_permissions = []
+
+    for (const command of registered_commands) {
+      global_permissions.push({
+        id: command.id,
+        permissions: [{
+          id: roles.staff_role.id,
+          type: 'ROLE',
+          permission: true,
+        }]
+      })
+    }
+
+    await Bot.guild.commands.permissions.set({
+      fullPermissions: global_permissions
     })
+    .then(console.log)
+    .catch(console.error);
   }
 
-  await Bot.guild.commands.permissions.set({
-    fullPermissions: global_permissions
-  })
-  .then(console.log)
-  .catch(console.error);
 }
 
 export const command_reply = (bot) => {
