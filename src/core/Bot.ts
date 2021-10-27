@@ -129,14 +129,16 @@ export class Bot {
     }
   }
 
-  static async findDiscordUser(params) {
+  static findDiscordUser(params) {
     const discord_user = new DiscordUser(params)
-    return await this.storage.find(discord_user)
+    return this.storage.find(discord_user)
       .then(result => result.json())
       .catch(err => {
         throw new Error(err)
       })
       .then(data => {
+        console.log(discord_user.discord_tag)
+        console.log(data)
         if (data === null || data.status <= 404) {
           console.error(`error with request`)
           console.log(data)
