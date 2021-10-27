@@ -45,7 +45,6 @@ export const init = async () => {
             await used_invite.delete().catch(err => console.log(err));
 
             Bot.log(`[Add Member] IVAO Member ${discord_user.user_id} clicked on his invitation link`)
-
             return discord_user;
           })
           .then(discord_user => Bot.storage.update(discord_user))
@@ -71,13 +70,9 @@ export const init = async () => {
       if (old.pending === true && member.pending === false) {
         await Bot.findDiscordUser({discord_id: member.user.id})
           .then(async discord_user => {
-            await Bot.log(`[Update Member] IVAO Member ${discord_user.nickname} has accepted rules`)
-
-            await Bot.log(`[Update Member] Member event object's nickname: ${member.nickname}`)
-            await Bot.log(`[Update Member] Storage member object's nickname:  ${discord_user.nickname}`)
+            await Bot.log(`[Update Member ${member.user.id}] IVAO Member ${discord_user.nickname} has accepted rules`)
             //Set member username
             if (member.nickname !== discord_user.nickname) {
-              await Bot.log(`[Update Member] Setting nickname...`)
               await member.setNickname(discord_user.nickname);
               await Bot.log(`[Update Member] Nickname set to ${discord_user.nickname}`)
             }
@@ -86,10 +81,10 @@ export const init = async () => {
             return discord_user;
           })
           .then(async discord_user => {
-            await Bot.log(`[Update Member] Fetching roles...`)
+            await Bot.log(`[Update Member ${member.user.id}] Fetching roles...`)
             let roles = Roles.fetchRoles(Bot.guild)
             let to_assign = discord_user.expectedRoles(roles);
-            await Bot.log(`[Update Member] Roles retrieved.`)
+            await Bot.log(`[Update Member ${member.user.id}] Roles retrieved.`)
 
             await Roles.addRoles(member, to_assign);
 

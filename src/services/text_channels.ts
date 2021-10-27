@@ -1,4 +1,4 @@
-import { Bot } from '../core/Bot'
+import { Bot } from '../core'
 import { GuildChannel, Permissions } from "discord.js";
 import { ChannelTypes } from "discord.js/typings/enums";
 import { fetchRoles, memberHasRoleId } from "./roles";
