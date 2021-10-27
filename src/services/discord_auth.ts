@@ -19,7 +19,7 @@ export const init = async () => {
 
     //Get newest invites from Discord
     const new_invites = await member.guild.invites.fetch();
-//Get currently cached invites
+    //Get currently cached invites
     const cached_invites = Bot.cached_invites.get(process.env.GUILD_ID)
     if (!cached_invites) Bot.log('no cached_invites found')
 
@@ -31,35 +31,36 @@ export const init = async () => {
       return cinvite && cinvite.uses < invite.uses;
     });
 
+    if(used_invite){
+      const used_invite_cache = {...used_invite}
+      Bot.cached_invites.set(process.env.GUILD_ID, new_invites); //Replace invites cache list by the new list
+      // Check invite exists and inviter is legit
+      if (used_invite_cache && used_invite_cache.inviter.username === process.env.BOT_USERNAME) {
+        //Ask website for DiscordUser
+        await Bot.findDiscordUser({invite_code: used_invite.code})
+          .then(async discord_user => {
+            discord_user.discord_id = member.id;
+            discord_user.discord_tag = member.user.tag
 
-    Bot.cached_invites.set(process.env.GUILD_ID, new_invites); //Replace invites cache list by the new list
+            await used_invite.delete().catch(err => console.log(err));
 
-    // Check invite exists and inviter is legit
-    if (used_invite && used_invite.inviter.username === process.env.BOT_USERNAME) {
-      //Ask website for DiscordUser
-      await Bot.findDiscordUser({invite_code: used_invite.code})
-        .then(async discord_user => {
-          discord_user.discord_id = member.id;
-          discord_user.discord_tag = member.user.tag
+            Bot.log(`[Add Member] IVAO Member ${discord_user.user_id} clicked on his invitation link`)
 
-          await used_invite.delete().catch(err => console.log(err));
+            return discord_user;
+          })
+          .then(discord_user => Bot.storage.update(discord_user))
+          .catch((err) => {
+            console.error(err)
+          });
 
-          Bot.log(`[Add Member] IVAO Member ${discord_user.user_id} clicked on his invitation link`)
-
-          return discord_user;
-        })
-        .then(discord_user => Bot.storage.update(discord_user))
-        .catch((err) => {
-          console.error(err)
-        });
-
-      //Find matching IVAO user in Redis
-      await Bot.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
-    } else {
-      await Bot.log(`[Add Member] Invite not found or Inviter is not correct`);
-      await Bot.log(`[Add Member] used_invite found is ${used_invite}`);
-      await Bot.log(`[Add Member] inviter found is ${used_invite.inviter.username}`);
-      await used_invite.delete().then(result => console.log(result)).catch(err => console.log(err));
+        //Find matching IVAO user in Redis
+        await Bot.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
+      } else {
+        await Bot.log(`[Add Member] Invite not found or Inviter is not correct`);
+        await Bot.log(`[Add Member] used_invite found is ${used_invite_cache}`);
+        await Bot.log(`[Add Member] inviter found is ${used_invite_cache.inviter.username}`);
+        await used_invite_cache.delete().then(result => console.log(result)).catch(err => console.log(err));
+      }
     }
   });
 
