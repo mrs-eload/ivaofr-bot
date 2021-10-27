@@ -5,7 +5,7 @@ import { fetchRoles, memberHasRoleId } from "./roles";
 
 
 export const checkChannels = async () => {
-  const bot = await Bot.connect();
+  await Bot.connect();
 
   const channels = await Bot.guild.channels.fetch();
   const voice_channels = [...channels.values()].filter(channel => channel.type === 'GUILD_VOICE')
@@ -15,34 +15,41 @@ export const checkChannels = async () => {
   for (const channel of voice_channels) {
     const text_eq = voiceChannelNameToTxt(channel.name);
     const txt_channel = text_channels.find(txt_channel => text_eq === txt_channel.name);
+    const everyone_role = Bot.guild.roles.cache.find(role => role.name === '@everyone');
+
+    const common_permissions = [
+      Permissions.FLAGS.VIEW_CHANNEL,
+      Permissions.FLAGS.SEND_MESSAGES,
+      Permissions.FLAGS.SEND_TTS_MESSAGES,
+      Permissions.FLAGS.SEND_MESSAGES_IN_THREADS,
+      Permissions.FLAGS.READ_MESSAGE_HISTORY
+    ]
+
+    const permissions = [
+      {
+        id: everyone_role.id,
+        deny: common_permissions
+      },
+      {
+        id: roles.member_role.id,
+        deny: common_permissions,
+      },
+      {
+        id: roles.staff_role.id,
+        deny: common_permissions,
+      },
+    ];
+
     if (!txt_channel) {
       await Bot.guild.channels.create(text_eq, {
         position: (channel.position > 0) ? channel.position - 1 : 0,
         parent: channel.parentId,
         type: ChannelTypes.GUILD_TEXT,
-        permissionOverwrites: [
-          {
-            id: roles.member_role.id,
-            deny: [
-              Permissions.FLAGS.VIEW_CHANNEL,
-              Permissions.FLAGS.SEND_MESSAGES,
-              Permissions.FLAGS.SEND_TTS_MESSAGES,
-              Permissions.FLAGS.SEND_MESSAGES_IN_THREADS,
-              Permissions.FLAGS.READ_MESSAGE_HISTORY
-            ],
-          },
-          {
-            id: roles.staff_role.id,
-            deny: [
-                Permissions.FLAGS.VIEW_CHANNEL,
-                Permissions.FLAGS.SEND_MESSAGES,
-                Permissions.FLAGS.SEND_TTS_MESSAGES,
-                Permissions.FLAGS.SEND_MESSAGES_IN_THREADS
-            ],
-          },
-        ],
+        permissionOverwrites: permissions,
       });
       console.log(`Channel ${text_eq} created`)
+    }else{
+      txt_channel.permissionOverwrites.set(permissions);
     }
   }
 }
@@ -57,10 +64,8 @@ export const text_to_voice = async () => {
   await checkChannels()
   bot.on('voiceStateUpdate', async (old, voice) => {
 
-
     const member = old.member;
     const guild = old.guild;
-
 
     if (old.channel) {
       const oldTextName = voiceChannelNameToTxt(old.channel.name);

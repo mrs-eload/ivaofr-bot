@@ -1,9 +1,6 @@
 import { Bot } from "../core/Bot"
 import { DiscordUser } from "../core";
 import * as Roles from "./roles"
-import { Invite } from "discord.js";
-
-let new_invites: Invite[];
 
 export const init = async () => {
   const bot = Bot.client
@@ -47,7 +44,7 @@ export const init = async () => {
 
           await used_invite.delete().catch(err => console.log(err));
 
-          Bot.log(`IVAO Member ${discord_user.user_id} clicked on his invitation link`)
+          Bot.log(`[Add Member] IVAO Member ${discord_user.user_id} clicked on his invitation link`)
 
           return discord_user;
         })
@@ -59,40 +56,39 @@ export const init = async () => {
       //Find matching IVAO user in Redis
       await Bot.log(`${member.user.tag} joined using invite code ${used_invite.code} from ${used_invite.inviter.username}. Invite was used ${used_invite.uses} times since its creation.`)
     } else {
-      await Bot.log(`Invite not found or Inviter is not correct`);
-      await Bot.log(`used_invite found is ${used_invite}`);
-      await Bot.log(`inviter found is ${used_invite.inviter.username}`);
+      await Bot.log(`[Add Member] Invite not found or Inviter is not correct`);
+      await Bot.log(`[Add Member] used_invite found is ${used_invite}`);
+      await Bot.log(`[Add Member] inviter found is ${used_invite.inviter.username}`);
       await used_invite.delete().then(result => console.log(result)).catch(err => console.log(err));
     }
   });
 
   bot.on('guildMemberUpdate', async (old, member) => {
     try {
-
       const is_active = (old.pending === false && member.pending === false)
       //detect rules acceptations
       if (old.pending === true && member.pending === false) {
         await Bot.findDiscordUser({discord_id: member.user.id})
           .then(async discord_user => {
-            await Bot.log(`IVAO Member ${discord_user.nickname} has accepted rules`)
+            await Bot.log(`[Update Member] IVAO Member ${discord_user.nickname} has accepted rules`)
 
-            await Bot.log(`Member event object's nickname: ${member.nickname}`)
-            await Bot.log(`Storage member object's nickname:  ${discord_user.nickname}`)
+            await Bot.log(`[Update Member] Member event object's nickname: ${member.nickname}`)
+            await Bot.log(`[Update Member] Storage member object's nickname:  ${discord_user.nickname}`)
             //Set member username
             if (member.nickname !== discord_user.nickname) {
-              await Bot.log(`Setting nickname...`)
+              await Bot.log(`[Update Member] Setting nickname...`)
               await member.setNickname(discord_user.nickname);
-              await Bot.log(`Nickname set to ${discord_user.nickname}`)
+              await Bot.log(`[Update Member] Nickname set to ${discord_user.nickname}`)
             }
             discord_user.is_pending = false;
             discord_user.is_active = true;
             return discord_user;
           })
           .then(async discord_user => {
-            await Bot.log(`Fetching roles...`)
+            await Bot.log(`[Update Member] Fetching roles...`)
             let roles = Roles.fetchRoles(Bot.guild)
             let to_assign = discord_user.expectedRoles(roles);
-            await Bot.log(`Roles retrieved.`)
+            await Bot.log(`[Update Member] Roles retrieved.`)
 
             await Roles.addRoles(member, to_assign);
 
@@ -113,15 +109,6 @@ export const init = async () => {
 
   bot.on('guildMemberRemove', async (member) => {
 
-    if (!member.joinedAt) {
-      await Bot.log('Without joinAt')
-      await Bot.log(`json ${JSON.stringify(member)} \r\n string ${member.toString()}`)
-      await Bot.log('member.partial = ' + member.partial)
-    } else {
-      await Bot.log('With joinAt')
-      await Bot.log(`json ${JSON.stringify(member)} \r\n string ${member.toString()}`)
-      await Bot.log('member.partial = ' + member.partial)
-    }
 
     const discord_user = new DiscordUser({
       discord_id: member.id
