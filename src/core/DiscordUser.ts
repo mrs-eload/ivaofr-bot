@@ -10,7 +10,7 @@ export class DiscordUser {
   is_active: boolean
   is_staff: boolean
   is_animator: boolean
-  other_roles: any
+  other_roles: []
 
   constructor(opts) {
     const {
@@ -32,7 +32,7 @@ export class DiscordUser {
     this.invite_url = invite_url;
     this.is_pending = is_pending;
     this.is_active = is_active;
-    this.other_roles = other_roles;
+    this.other_roles = other_roles?? [];
   }
 
   setActive(is_active) {
