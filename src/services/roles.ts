@@ -1,5 +1,7 @@
 import { Role } from "discord.js";
 
+export const reservedRoles = ['Nitro Booster', 'Server Booster', '@everyone'];
+
 export const fetchRoles = (guild): Record<string, Role> => {
     return {
         staff_role: guild.roles.cache.find(role => role.name === 'staff'),
@@ -8,6 +10,8 @@ export const fetchRoles = (guild): Record<string, Role> => {
         va_role: guild.roles.cache.find(role => role.name === 'va'),
         fo_role: guild.roles.cache.find(role => role.name === 'fo'),
         wm_role: guild.roles.cache.find(role => role.name === 'wm'),
+        tc_role: guild.roles.cache.find(role => role.name === 'tc'),
+        admin_role: guild.roles.cache.find(role => role.name === 'admin'),
     }
 }
 

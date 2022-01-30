@@ -1,10 +1,9 @@
-import { Client, Collection, GuildInviteManager, Invite, MessageEmbed } from "discord.js";
+import { Client, Guild, GuildManager, MessageEmbed } from "discord.js";
 import { DiscordUser } from "./DiscordUser";
 
 export class Bot {
 
   private static instance: Bot;
-  private static _cached_invites: Collection<string, any> = new Collection();
   public static storage: any
   private static _client: any
   private static _guild: any
@@ -40,54 +39,6 @@ export class Bot {
 
   }
 
-  static createInvite(opts) {
-    const {channel_name} = opts;
-    const channel = Bot.findChannel(channel_name);
-
-    if (!channel) throw new Error(`Can't find channel ${channel_name}`)
-
-    return channel.createInvite({
-      temporary: false,
-      unique: true,
-      maxUses: 2
-    });
-  }
-
-  static async saveInvite(opts) {
-    const {invite, ivao_member} = opts;
-    const discord_user = new DiscordUser({
-      user_id: ivao_member.id,
-      invite_code: invite.code,
-      invite_url: invite.url,
-      is_pending: true
-    })
-    await Bot.refresh_invites()
-    return discord_user;
-  }
-
-  static async fetchInvites(guild_id) {
-    return guild_id.invites.fetch();
-  }
-
-  static async refresh_invites() {
-    return Bot.guild.invites.fetch()
-      .then(guildInvites => {
-        const copy_invites = Bot.storeInviteArray(guildInvites)
-        Bot.cached_invites.set(Bot.guild.id, copy_invites)
-
-      })
-      .catch(err => console.log(err))
-  }
-
-  static storeInviteArray(invites: Invite[]){
-    const copy_invites = new Collection()
-    invites.forEach(invite => {
-      const invite_copy = {...invite, uses: invite.uses}
-      copy_invites.set(invite.code, invite_copy)
-    })
-    return copy_invites;
-  }
-
   static async connect(): Promise<Client> {
     if (!Bot.client) {
       return new Promise( (resolve, reject) => {
@@ -98,7 +49,6 @@ export class Bot {
         Bot.client.login(process.env.BOT_TOKEN)
           .then(async res => {
             Bot.guild = Bot.client.guilds.cache.get(process.env.GUILD_ID)
-            await Bot.refresh_invites()
             Bot.is_ready = true;
             resolve(Bot.client)
           })
@@ -137,7 +87,7 @@ export class Bot {
         throw new Error(err)
       })
       .then(data => {
-        console.log(discord_user.discord_tag)
+        console.log(discord_user)
         console.log(data)
         if (data === null || data.status <= 404) {
           console.error(`error with request`)
@@ -167,7 +117,7 @@ export class Bot {
   /**
    * @return {Guild}
    */
-  static get guild() {
+  static get guild(): Guild {
     return Bot._guild;
   }
 
@@ -177,20 +127,5 @@ export class Bot {
 
   static set is_ready(val) {
     Bot._is_ready = val;
-  }
-
-  /**
-   * @type Map
-   * @param val
-   */
-  static set cached_invites(val) {
-    Bot._cached_invites = (val);
-  }
-
-  /**
-   * @returns {Map}
-   */
-  static get cached_invites() {
-    return Bot._cached_invites;
   }
 }

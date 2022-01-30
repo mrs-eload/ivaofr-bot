@@ -1,11 +1,11 @@
+import { Snowflake } from "discord-api-types";
+
 export class DiscordUser {
 
-  discord_id: number
+  discord_id: Snowflake
   user_id: number
   nickname: string
   discord_tag: string
-  invite_code: string
-  invite_url: string
   is_pending: boolean
   is_active: boolean
   is_staff: boolean
@@ -18,8 +18,6 @@ export class DiscordUser {
       user_id,
       nickname,
       discord_tag,
-      invite_code,
-      invite_url,
       is_pending,
       is_active,
       other_roles
@@ -28,8 +26,6 @@ export class DiscordUser {
     this.user_id = user_id
     this.nickname = nickname;
     this.discord_tag = discord_tag;
-    this.invite_code = invite_code;
-    this.invite_url = invite_url;
     this.is_pending = is_pending;
     this.is_active = is_active;
     this.other_roles = other_roles;
@@ -51,8 +47,6 @@ export class DiscordUser {
       user_id: this.user_id,
       nickname: this.nickname,
       discord_tag: this.discord_tag,
-      invite_code: this.invite_code,
-      invite_url: this.invite_url,
       is_pending: this.is_pending,
       is_active: this.is_active,
       other_roles: this.other_roles
