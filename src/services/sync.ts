@@ -2,7 +2,6 @@ import { Bot } from "../core/Bot";
 import * as Roles from "./roles"
 import { DiscordUser } from "../core";
 
-
 export const syncUsers = async (users) => {
   return await Promise.all(users.filter(u => u.discord_id !== null ).map( async user => {
     const discord_user = new DiscordUser(user);
@@ -16,9 +15,7 @@ export const syncUsers = async (users) => {
             update_necessary = true;
             discord_user.discord_tag = member.user.tag
           }
-
           // Check discord member elements
-
           if (discord_user.is_active) {
             if (discord_user.nickname !== member.nickname) {
               await member.setNickname(discord_user.nickname)
@@ -30,12 +27,14 @@ export const syncUsers = async (users) => {
             }
 
             const roles = Roles.fetchRoles(Bot.guild);
+            const reserved_roles = Roles.reservedRoles;
             const expectedRoles = discord_user.expectedRoles(roles);
             const expectedRolesNames = expectedRoles.map(r => r.name);
             const rolesToRemove = member.roles.cache.filter(r => {
-                return r.name !== '@everyone' && r.name !== 'admin' && !expectedRolesNames.includes(r.name);
+                return reserved_roles.includes(r.name) &&
+                  r.name !== 'admin' &&
+                  !expectedRolesNames.includes(r.name);
             });
-
             await Roles.addRoles(member, expectedRoles).then(status => promises.push(status));
             await Roles.removeRoles(member, rolesToRemove).then(status => promises.push(status));
           }
