@@ -31,7 +31,7 @@ export const syncUsers = async (users) => {
             const expectedRoles = discord_user.expectedRoles(roles);
             const expectedRolesNames = expectedRoles.map(r => r.name);
             const rolesToRemove = member.roles.cache.filter(r => {
-                return reserved_roles.includes(r.name) &&
+                return !reserved_roles.includes(r.name) &&
                   r.name !== 'admin' &&
                   !expectedRolesNames.includes(r.name);
             });
