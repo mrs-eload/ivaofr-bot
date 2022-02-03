@@ -92,34 +92,36 @@ export const text_to_voice = async () => {
     const member = old.member;
     const guild = old.guild;
 
-    if (old.channel) {
-      const oldTextName = voiceChannelNameToTxt(old.channel.name);
-      const oldTextChannel: GuildChannel = <GuildChannel>guild.channels.cache.find(c => c.name === oldTextName);
-      if (oldTextChannel) {
-        await oldTextChannel.permissionOverwrites.delete(member);
+    if (old.channel !== voice.channel) {
+      if (old.channel) {
+        const oldTextName = voiceChannelNameToTxt(old.channel.name);
+        const oldTextChannel: GuildChannel = <GuildChannel>guild.channels.cache.find(c => c.name === oldTextName);
+        if (oldTextChannel) {
+          await oldTextChannel.permissionOverwrites.delete(member);
+        }
       }
-    }
 
-    if (voice.channel) {
-      const textName = voiceChannelNameToTxt(voice.channel.name);
-      const textChannel: GuildChannel = <GuildChannel>guild.channels.cache.find(c => c.name === textName);
-      if (textChannel) {
-        if(textChannel.parent.name.toLowerCase().indexOf('training') > -1){
-          await textChannel.permissionOverwrites.create(member, {
+      if (voice.channel) {
+        const textName = voiceChannelNameToTxt(voice.channel.name);
+        const textChannel: GuildChannel = <GuildChannel>guild.channels.cache.find(c => c.name === textName);
+        if (textChannel) {
+          if(textChannel.parent.name.toLowerCase().indexOf('training') > -1){
+            await textChannel.permissionOverwrites.create(member, {
               VIEW_CHANNEL: true,
               SEND_MESSAGES: true,
               SEND_TTS_MESSAGES: true,
               SEND_MESSAGES_IN_THREADS: true,
               READ_MESSAGE_HISTORY: memberHasRoleId(member, roles.tc_role.id),
-          });
-        }else{
-          await textChannel.permissionOverwrites.create(member, {
-            VIEW_CHANNEL: true,
-            SEND_MESSAGES: true,
-            SEND_TTS_MESSAGES: true,
-            SEND_MESSAGES_IN_THREADS: true,
-            READ_MESSAGE_HISTORY: memberHasRoleId(member, roles.staff_role.id),
-          });
+            });
+          }else{
+            await textChannel.permissionOverwrites.create(member, {
+              VIEW_CHANNEL: true,
+              SEND_MESSAGES: true,
+              SEND_TTS_MESSAGES: true,
+              SEND_MESSAGES_IN_THREADS: true,
+              READ_MESSAGE_HISTORY: memberHasRoleId(member, roles.staff_role.id),
+            });
+          }
         }
       }
     }
