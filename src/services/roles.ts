@@ -10,7 +10,6 @@ export const fetchRoles = (guild): Record<string, Role> => {
         va_role: guild.roles.cache.find(role => role.name === 'va'),
         fo_role: guild.roles.cache.find(role => role.name === 'fo'),
         wm_role: guild.roles.cache.find(role => role.name === 'wm'),
-        tc_role: guild.roles.cache.find(role => role.name === 'tc'),
         pr_role: guild.roles.cache.find(role => role.name === 'pr'),
         externe_role: guild.roles.cache.find(role => role.name === 'externe'),
         admin_role: guild.roles.cache.find(role => role.name === 'admin'),

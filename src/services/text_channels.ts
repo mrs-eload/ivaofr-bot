@@ -1,7 +1,6 @@
 import { Bot } from '../core'
 import {
   CategoryChannel,
-  Channel,
   GuildChannel,
   NewsChannel,
   Permissions, StageChannel, StoreChannel,
@@ -52,8 +51,6 @@ async function getCommonChannelPermissions(channel: TextChannel | VoiceChannel |
     Permissions.FLAGS.READ_MESSAGE_HISTORY
   ];
 
-  const tc_permissions = [...common_permissions]
-
   if(channel.parent.name.toLowerCase().indexOf('training') > -1){
     common_permissions.pop();
   }
@@ -70,12 +67,7 @@ async function getCommonChannelPermissions(channel: TextChannel | VoiceChannel |
     {
       id: roles.staff_role.id,
       deny: common_permissions,
-    },
-    {
-      id: roles.tc_role.id,
-      deny: tc_permissions,
-      allow: [Permissions.FLAGS.READ_MESSAGE_HISTORY]
-    },
+    }
   ]
 }
 
@@ -111,7 +103,7 @@ export const text_to_voice = async () => {
               SEND_MESSAGES: true,
               SEND_TTS_MESSAGES: true,
               SEND_MESSAGES_IN_THREADS: true,
-              READ_MESSAGE_HISTORY: memberHasRoleId(member, roles.tc_role.id),
+              READ_MESSAGE_HISTORY: false,
             });
           }else{
             await textChannel.permissionOverwrites.create(member, {
