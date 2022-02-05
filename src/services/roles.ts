@@ -1,8 +1,12 @@
-import { Role } from "discord.js";
+import { Guild, Role } from "discord.js";
 
 export const reservedRoles = ['Nitro Booster', 'Server Booster', '@everyone'];
 
-export const fetchRoles = (guild): Record<string, Role> => {
+export const fetchRoles = async (guild: Guild, refresh = false): Promise<Record<string, Role>> => {
+
+    if(refresh){
+        await guild.roles.fetch()
+    }
     return {
         staff_role: guild.roles.cache.find(role => role.name === 'staff'),
         anim_role: guild.roles.cache.find(role => role.name === 'animateur'),

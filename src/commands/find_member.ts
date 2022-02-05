@@ -41,9 +41,10 @@ export const find_member: CommandRegistration = {
             .setColor("#14dc1e")
             .setTitle("Nungesser a trouvé quelque chose!")
             .addField("VID:", `${discord_user.user_id}`)
+            .addField("Nom:", `${discord_user.full_name}`)
+            .addField("Pseudo:", `${discord_user.nickname}`)
             .addField("Discord ID:", `${discord_user.discord_id}`)
             .addField("Discord Tag:", `${discord_user.discord_tag}`)
-            .addField("Pseudo:", `${discord_user.nickname}`)
             .addField("A accepté les règles?", `${(discord_user.is_active) ? 'Oui' : 'Non'}`)
         }).catch(err => {
           return new MessageEmbed()

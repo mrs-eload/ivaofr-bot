@@ -26,7 +26,7 @@ export const syncUsers = async (users) => {
                 .catch(err => console.log(err));
             }
 
-            const roles = Roles.fetchRoles(Bot.guild);
+            const roles = await Roles.fetchRoles(Bot.guild);
             const reserved_roles = Roles.reservedRoles;
             const expectedRoles = discord_user.expectedRoles(roles);
             const expectedRolesNames = expectedRoles.map(r => r.name);

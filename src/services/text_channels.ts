@@ -23,7 +23,7 @@ export const checkChannels = async () => {
   const channels = await Bot.guild.channels.fetch();
   const voice_channels = [...channels.values()].filter(channel => channel.type === 'GUILD_VOICE')
   const text_channels = [...channels.values()].filter(channel => channel.type === 'GUILD_TEXT')
-  const roles = fetchRoles(Bot.guild)
+  const roles = await fetchRoles(Bot.guild, true)
 
   for (const channel of voice_channels) {
     const text_eq = voiceChannelNameToTxt(channel.name);
@@ -87,7 +87,7 @@ const voiceChannelNameToTxt = (channel_name) => {
 
 export const text_to_voice = async () => {
   const bot = await Bot.connect();
-  const roles = fetchRoles(Bot.guild)
+  const roles = await fetchRoles(Bot.guild)
   await checkChannels()
   bot.on('voiceStateUpdate', async (old, voice) => {
 

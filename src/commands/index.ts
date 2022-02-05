@@ -5,7 +5,7 @@ import { Routes } from "discord-api-types/v9";
 import { fetchRoles } from "../services/roles";
 import { find_member } from "./find_member";
 import { server_info } from "./server_info";
-import { check_channels } from "./admin";
+import { check_channels, clean } from "./admin";
 import { CommandRegistration } from "./command.interface";
 
 export * from './find_member'
@@ -29,6 +29,7 @@ export const command_register = async () => {
       storeCommand(find_member),
       storeCommand(server_info),
       storeCommand(check_channels),
+      storeCommand(clean),
     ].map(command => command.toJSON());
     const global_permissions = [];
     let registered_commands = null;
@@ -43,7 +44,7 @@ export const command_register = async () => {
         registered_commands = commands;
         commands.forEach(async (command) => {
           const stored_command = commands_map.get(command.name);
-          const roles = fetchRoles(Bot.guild)
+          const roles = await fetchRoles(Bot.guild)
           console.log(`Set permissions for command ${command.name}`);
           const permissions = stored_command.factory.getDefaultPermissions(roles);
           global_permissions.push({
@@ -68,10 +69,10 @@ export const command_register = async () => {
 export const command_reply = (bot) => {
   bot.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
-    await interaction.deferReply({ephemeral: true});
     const {commandName} = interaction;
     const command = commands_map.get(commandName)
+    if(commandName !== 'clean') await interaction.deferReply({ephemeral: true});
     const response = await command.factory.execute(interaction)
-    await interaction.editReply({embeds: [response]});
+    if(commandName !== 'clean') await interaction.editReply({embeds: [response]});
   });
 }

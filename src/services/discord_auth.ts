@@ -19,7 +19,7 @@ export const init = async () => {
           discord_user.is_pending = false;
           discord_user.is_active = true;
           logs.push(`[Update Member ${member.user.id}] Fetching roles...`)
-          let roles = Roles.fetchRoles(Bot.guild)
+          let roles = await Roles.fetchRoles(Bot.guild)
           let to_assign = discord_user.expectedRoles(roles);
           logs.push(`[Update Member ${member.user.id}] Roles retrieved.`)
 
