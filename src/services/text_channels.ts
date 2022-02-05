@@ -11,6 +11,12 @@ import { ChannelTypes } from "discord.js/typings/enums";
 import { fetchRoles, memberHasRoleId } from "./roles";
 
 
+export async function cleanChannel (channel: TextChannel){
+  const new_channel = await channel.clone()
+  await channel.delete();
+  return new_channel;
+}
+
 export const checkChannels = async () => {
   await Bot.connect();
 
@@ -22,7 +28,6 @@ export const checkChannels = async () => {
   for (const channel of voice_channels) {
     const text_eq = voiceChannelNameToTxt(channel.name);
     const txt_channel = text_channels.find(txt_channel => text_eq === txt_channel.name);
-
     const channel_permissions = await getCommonChannelPermissions(channel, roles);
 
     if (!txt_channel) {
@@ -47,7 +52,12 @@ async function getCommonChannelPermissions(channel: TextChannel | VoiceChannel |
     Permissions.FLAGS.VIEW_CHANNEL,
     Permissions.FLAGS.SEND_MESSAGES,
     Permissions.FLAGS.SEND_TTS_MESSAGES,
+    Permissions.FLAGS.ADD_REACTIONS,
+    Permissions.FLAGS.ATTACH_FILES,
+    Permissions.FLAGS.USE_PUBLIC_THREADS,
+    Permissions.FLAGS.CREATE_PUBLIC_THREADS,
     Permissions.FLAGS.SEND_MESSAGES_IN_THREADS,
+    Permissions.FLAGS.EMBED_LINKS,
     Permissions.FLAGS.READ_MESSAGE_HISTORY
   ];
 
@@ -102,7 +112,12 @@ export const text_to_voice = async () => {
               VIEW_CHANNEL: true,
               SEND_MESSAGES: true,
               SEND_TTS_MESSAGES: true,
+              ADD_REACTIONS: true,
+              ATTACH_FILES: true,
+              USE_PUBLIC_THREADS: true,
+              CREATE_PUBLIC_THREADS: true,
               SEND_MESSAGES_IN_THREADS: true,
+              EMBED_LINKS: true,
               READ_MESSAGE_HISTORY: false,
             });
           }else{
@@ -110,7 +125,12 @@ export const text_to_voice = async () => {
               VIEW_CHANNEL: true,
               SEND_MESSAGES: true,
               SEND_TTS_MESSAGES: true,
+              ADD_REACTIONS: true,
+              ATTACH_FILES: true,
+              USE_PUBLIC_THREADS: true,
+              CREATE_PUBLIC_THREADS: true,
               SEND_MESSAGES_IN_THREADS: true,
+              EMBED_LINKS: true,
               READ_MESSAGE_HISTORY: memberHasRoleId(member, roles.staff_role.id),
             });
           }
