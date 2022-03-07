@@ -27,7 +27,8 @@ export const metar: CommandRegistration = {
   execute: async function (interaction) {
     const icao = interaction.options.get('icao')
     const response = new MessageEmbed()
-    if(!icao_taf.includes(icao.value)){
+
+    if(!icao_metar.includes(icao.value)){
       response.setTitle('La station n\'existe pas')
       response.setColor('#ff0000')
       return response
