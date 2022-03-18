@@ -40,6 +40,7 @@ export const find_member: CommandRegistration = {
           return new MessageEmbed()
             .setColor("#14dc1e")
             .setTitle("Nungesser a trouvé quelque chose!")
+            .addField("Profil IVAO:", `https://www.ivao.aero/Login.aspx?r=Member.aspx?Id=${discord_user.user_id}`)
             .addField("VID:", `${discord_user.user_id}`)
             .addField("Nom:", `${discord_user.full_name}`)
             .addField("Pseudo:", `${discord_user.nickname}`)
