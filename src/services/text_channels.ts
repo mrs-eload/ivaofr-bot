@@ -58,7 +58,8 @@ async function getCommonChannelPermissions(channel: TextChannel | VoiceChannel |
     Permissions.FLAGS.CREATE_PUBLIC_THREADS,
     Permissions.FLAGS.SEND_MESSAGES_IN_THREADS,
     Permissions.FLAGS.EMBED_LINKS,
-    Permissions.FLAGS.READ_MESSAGE_HISTORY
+    Permissions.FLAGS.READ_MESSAGE_HISTORY,
+    Permissions.FLAGS.USE_APPLICATION_COMMANDS,
   ];
 
   if(channel.parent.name.toLowerCase().indexOf('training') > -1){
@@ -119,6 +120,7 @@ export const text_to_voice = async () => {
               SEND_MESSAGES_IN_THREADS: true,
               EMBED_LINKS: true,
               READ_MESSAGE_HISTORY: false,
+              USE_APPLICATION_COMMANDS: true,
             });
           }else{
             await textChannel.permissionOverwrites.create(member, {
@@ -131,6 +133,7 @@ export const text_to_voice = async () => {
               CREATE_PUBLIC_THREADS: true,
               SEND_MESSAGES_IN_THREADS: true,
               EMBED_LINKS: true,
+              USE_APPLICATION_COMMANDS: true,
               READ_MESSAGE_HISTORY: memberHasRoleId(member, roles.staff_role.id),
             });
           }
