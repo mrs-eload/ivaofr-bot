@@ -57,7 +57,11 @@ export class DiscordUser {
     let res = [];
     const other_roles = (this.other_roles) ? this.other_roles : [];
     other_roles.forEach(role => {
-      res.push(roles[`${role}_role`]);
+      if(roles[`${role}_role`]){
+        res.push(roles[`${role}_role`]);
+      }else{
+        console.log(`${role}_role not on discord`);
+      }
     });
     if (this.is_active === true) {
       res.push(roles.member_role)
