@@ -15,7 +15,8 @@ export const server_info: CommandRegistration = {
     const roles = await fetchRoles(Bot.guild, true)
     const members = roles.member_role.members.filter((member) => {
       const is_staff = member.roles.resolve(roles.staff_role.id)
-      return is_staff === null;
+      const is_anim = member.roles.resolve(roles.anim_role.id)
+      return is_staff === null && is_anim === null;
     })
 
     const report = `

@@ -1,5 +1,4 @@
 import { Bot } from "../core";
-import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 import { fetchRoles } from "../services/roles";
@@ -7,13 +6,14 @@ import { find_member } from "./find_member";
 import { server_info } from "./server_info";
 import { check_channels, clean } from "./admin";
 import { CommandRegistration } from "./command.interface";
+import { metar, taf } from "./weather";
 
 export * from './find_member'
 const commands_map = new Map();
 
 
-function storeCommand (factory: CommandRegistration){
-  const command = factory.register();
+async function storeCommand (factory: CommandRegistration){
+  const command = await factory.register();
   commands_map.set(command.name, {factory, command});
   return command
 }
@@ -24,12 +24,13 @@ export const command_register = async () => {
   const guild_id = process.env.GUILD_ID;
 
   if(client_id && guild_id){
-
     const commands = [
-      storeCommand(find_member),
-      storeCommand(server_info),
-      storeCommand(check_channels),
-      storeCommand(clean),
+      await storeCommand(find_member),
+      await storeCommand(server_info),
+      await storeCommand(check_channels),
+      await storeCommand(clean),
+      await storeCommand(metar),
+      await storeCommand(taf),
     ].map(command => command.toJSON());
     const global_permissions = [];
     let registered_commands = null;
