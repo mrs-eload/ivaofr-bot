@@ -25,15 +25,15 @@ export const metar: CommandRegistration = {
       .addStringOption(option => option.setName('icao').setDescription('Code ICAO de la station').setRequired(true))
   },
   execute: async function (interaction) {
-    const icao = interaction.options.get('icao')
+    const input = interaction.options.get('icao');
     const response = new MessageEmbed()
-
-    if(!icao_metar.includes(icao.value)){
+    const icao = input.value.toUpperCase();
+    if(!icao_metar.includes(icao)){
       response.setTitle('La station n\'existe pas')
       response.setColor('#ff0000')
       return response
     }
-    const request = await fetch(`${metar_url}/${icao.value}.TXT`);
+    const request = await fetch(`${metar_url}/${icao}.TXT`);
     if(request.status == 404){
       response.setTitle('La station n\'existe pas')
       response.setColor('#ff0000')
@@ -53,7 +53,7 @@ export const metar: CommandRegistration = {
     `;
     try {
       response.setColor("#14dc1e")
-        .setTitle(`METAR ${icao.value}`)
+        .setTitle(`METAR ${icao}`)
         .setDescription(report)
     } catch (err) {
       response
@@ -90,14 +90,15 @@ export const taf: CommandRegistration = {
       .addStringOption(option => option.setName('icao').setDescription('Code ICAO de la station').setRequired(true))
   },
   execute: async function (interaction) {
-    const icao = interaction.options.get('icao')
+    const input = interaction.options.get('icao')
     const response = new MessageEmbed()
-    if(!icao_taf.includes(icao.value)){
+    const icao = input.value.toUpperCase();
+    if(!icao_taf.includes(icao)){
       response.setTitle('La station n\'existe pas')
       response.setColor('#ff0000')
       return response
     }
-    const request = await fetch(`${taf_url}/${icao.value}.TXT`);
+    const request = await fetch(`${taf_url}/${icao}.TXT`);
     if(request.status == 404){
       response.setTitle('La station n\'existe pas')
       response.setColor('#ff0000')
@@ -117,7 +118,7 @@ export const taf: CommandRegistration = {
     `;
     try {
       response.setColor("#14dc1e")
-        .setTitle(`TAF ${icao.value}`)
+        .setTitle(`TAF ${icao}`)
         .setDescription(report)
     } catch (err) {
       response
