@@ -62,6 +62,21 @@ const bootstrap = async () => {
     }
   });
 
+  app.post('/user/pm', cors({origin: process.env.CORS_ORIGIN}), async (req, res, next) => {
+    if(!Bot.guild) await Bot.connect();
+    await Bot.whenReady();
+
+    const query = req.body;
+    const user = query.discord_user
+    const content = query.content;
+    if (user) {
+      await Bot.sendPrivateMessage(user, content)
+        .then(success => res.send({success}))
+    } else {
+      res.sendStatus(400)
+    }
+  });
+
   app.post('/users/sync', cors({origin:process.env.CORS_ORIGIN}), async (req,res,next) => {
     if(!Bot.guild) await Bot.connect();
     await Bot.whenReady();
