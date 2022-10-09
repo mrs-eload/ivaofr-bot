@@ -39,6 +39,18 @@ export class Bot {
 
   }
 
+  static async sendPrivateMessage(opts, content) {
+    await Bot.guild.members.fetch(opts.discord_id)
+      .then(async member => {
+        await Promise.all(content.map( async message => {
+          await member.send(message)
+        }))
+      })
+      .catch(err => {
+        console.log(err)
+      });
+  }
+
   static async connect(): Promise<Client> {
     if (!Bot.client) {
       return new Promise( (resolve, reject) => {
