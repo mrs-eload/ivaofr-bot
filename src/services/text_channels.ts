@@ -21,8 +21,8 @@ export const checkChannels = async () => {
   await Bot.connect();
 
   const channels = await Bot.guild.channels.fetch();
-  const voice_channels = [...channels.values()].filter(channel => channel.type === 'GUILD_VOICE')
-  const text_channels = [...channels.values()].filter(channel => channel.type === 'GUILD_TEXT')
+  const voice_channels = [...channels.values()].filter(channel => channel?.type === 'GUILD_VOICE')
+  const text_channels = [...channels.values()].filter(channel => channel?.type === 'GUILD_TEXT')
   const roles = await fetchRoles(Bot.guild, true)
 
   for (const channel of voice_channels) {
