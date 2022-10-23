@@ -10,7 +10,7 @@ export const find_member: CommandRegistration = {
   register: function() {
     return new SlashCommandBuilder().setName('user')
       .setDescription('user [vid]')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
       .addNumberOption(option => option.setName('vid').setDescription('Chercher par VID'))
       .addNumberOption(option => option.setName('discord_id').setDescription('Chercher par Discord ID'))
   },

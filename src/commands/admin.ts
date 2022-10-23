@@ -7,7 +7,7 @@ export const check_channels: CommandRegistration = {
   register: function(){
     return new SlashCommandBuilder().setName('check_channels')
       .setDescription('Check all channels and reset permissions')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
   },
   execute: async function (){
     const response = new MessageEmbed()
@@ -41,7 +41,7 @@ export const clean: CommandRegistration = {
   register: function(){
     return new SlashCommandBuilder().setName('clean')
       .setDescription('Clean channel content')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
   },
   execute: async function (interaction){
     const response = new MessageEmbed()

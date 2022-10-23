@@ -8,7 +8,7 @@ export const server_info: CommandRegistration = {
   register: function () {
     return new SlashCommandBuilder().setName('server')
       .setDescription('Afficher les informations du serveur')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
   },
   execute: async function (interaction) {
     const response = new MessageEmbed()
