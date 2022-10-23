@@ -1,4 +1,4 @@
-FROM node:16.6.1-alpine
+FROM node:16.9.0-alpine
 RUN apk update
 RUN apk add build-base
 RUN apk add make
