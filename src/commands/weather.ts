@@ -21,7 +21,7 @@ export const metar: CommandRegistration = {
     });
     return new SlashCommandBuilder().setName('metar')
       .setDescription('Récupérer le METAR de la station')
-      .setDefaultMemberPermissions(0)
+      .setDefaultPermission(false)
       .addStringOption(option => option.setName('icao').setDescription('Code ICAO de la station').setRequired(true))
   },
   execute: async function (interaction) {
@@ -86,7 +86,7 @@ export const taf: CommandRegistration = {
     });
     return new SlashCommandBuilder().setName('taf')
       .setDescription('Récupérer le METAR de la station')
-      .setDefaultMemberPermissions(0)
+      .setDefaultPermission(false)
       .addStringOption(option => option.setName('icao').setDescription('Code ICAO de la station').setRequired(true))
   },
   execute: async function (interaction) {
