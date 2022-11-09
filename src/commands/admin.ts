@@ -1,16 +1,15 @@
-import {  MessageEmbed } from "discord.js";
+import { ApplicationCommandPermissions, ApplicationCommandPermissionType, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { checkChannels, cleanChannel } from "../services/text_channels";
 import { CommandRegistration } from "./command.interface";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 export const check_channels: CommandRegistration = {
   register: function(){
     return new SlashCommandBuilder().setName('check_channels')
       .setDescription('Check all channels and reset permissions')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
   },
   execute: async function (){
-    const response = new MessageEmbed()
+    const response = new EmbedBuilder()
     try{
       await checkChannels();
       response.setColor("#14dc1e")
@@ -19,19 +18,21 @@ export const check_channels: CommandRegistration = {
       response
         .setColor("#DC143C")
         .setTitle("Nungesser a eu des problèmes!")
-        .addField(`Erreur`, `${err.message}`)
+        .addFields([
+          {name: `Erreur`, value: `${err.message}`}
+        ])
     }
     return response;
   },
-  getDefaultPermissions: function(roles){
+  getDefaultPermissions: function(roles): ApplicationCommandPermissions[]{
     return [{
       id: roles.wm_role.id,
-      type: 'ROLE',
+      type: ApplicationCommandPermissionType.Role,
       permission: true,
     },
     {
       id: roles.admin_role.id,
-      type: 'ROLE',
+      type: ApplicationCommandPermissionType.Role,
       permission: true,
     }];
   }
@@ -41,10 +42,10 @@ export const clean: CommandRegistration = {
   register: function(){
     return new SlashCommandBuilder().setName('clean')
       .setDescription('Clean channel content')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
   },
   execute: async function (interaction){
-    const response = new MessageEmbed()
+    const response = new EmbedBuilder()
     try{
       if(interaction.channel.type === "GUILD_TEXT"){
         interaction.channel = await cleanChannel(interaction.channel);
@@ -58,19 +59,21 @@ export const clean: CommandRegistration = {
       response
         .setColor("#DC143C")
         .setTitle("Nungesser a eu des problèmes!")
-        .addField(`Erreur`, `${err.message}`)
+        .addFields([
+          {name: `Erreur`, value: `${err.message}`}
+        ])
     }
     return response;
   },
-  getDefaultPermissions: function(roles){
+  getDefaultPermissions: function(roles): ApplicationCommandPermissions[]{
     return [{
       id: roles.wm_role.id,
-      type: 'ROLE',
+      type: ApplicationCommandPermissionType.Role,
       permission: true,
     },
       {
         id: roles.admin_role.id,
-        type: 'ROLE',
+        type: ApplicationCommandPermissionType.Role,
         permission: true,
       }];
   }

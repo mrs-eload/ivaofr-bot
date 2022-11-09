@@ -9,31 +9,38 @@ export const init = async () => {
   });
 
   bot.on('guildMemberUpdate', async (old, member) => {
-      try {
-        //detect rules acceptations
-        if (old.pending === true && member.pending === false) {
 
-          const logs = [];
-          const discord_user = await Bot.findDiscordUser({discord_id: member.user.id})
-          logs.push(`[Update Member ${member.user.id}] IVAO Member ${discord_user.nickname} has accepted rules`)
-          discord_user.is_pending = false;
-          discord_user.is_active = true;
-          logs.push(`[Update Member ${member.user.id}] Fetching roles...`)
-          let roles = await Roles.fetchRoles(Bot.guild)
-          let to_assign = discord_user.expectedRoles(roles);
-          logs.push(`[Update Member ${member.user.id}] Roles retrieved.`)
+    // try{
+    //   if(old.premiumSince === null && member.premiumSince !== null){
+    //     await Bot.sendPrivateMessage(member.id, `La division France te remercie beaucoup de ton soutien !`)
+    //   }
+    // }catch(er){}
 
-          await Roles.addRoles(member, to_assign);
+    try {
+      //detect rules acceptations
+      if (old.pending === true && member.pending === false) {
 
-          logs.push(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
+        const logs = [];
+        const discord_user = await Bot.findDiscordUser({discord_id: member.user.id})
+        logs.push(`[Update Member ${member.user.id}] IVAO Member ${discord_user.nickname} has accepted rules`)
+        discord_user.is_pending = false;
+        discord_user.is_active = true;
+        logs.push(`[Update Member ${member.user.id}] Fetching roles...`)
+        let roles = await Roles.fetchRoles(Bot.guild)
+        let to_assign = discord_user.expectedRoles(roles);
+        logs.push(`[Update Member ${member.user.id}] Roles retrieved.`)
 
-          Bot.log(logs.join('\r\n'))
+        await Roles.addRoles(member, to_assign);
 
-          Bot.storage.update(discord_user)
-        }
-      } catch (err) {
-        console.error(err)
+        logs.push(`User ${member.user.id} is known as ${discord_user.nickname} and has role ${to_assign.map(role => role.name).join(' ')}`)
+
+        Bot.log(logs.join('\r\n'))
+
+        Bot.storage.update(discord_user)
       }
+    } catch (err) {
+      console.error(err)
+    }
   })
 
   bot.on('guildMemberRemove', (member) => {

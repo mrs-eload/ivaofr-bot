@@ -1,10 +1,11 @@
-import { Client, Guild, GuildManager, MessageEmbed } from "discord.js";
+import { Client, GatewayIntentBits, Guild, EmbedBuilder, REST, Routes } from "discord.js";
 import { DiscordUser } from "./DiscordUser";
 
 export class Bot {
 
   private static instance: Bot;
   public static storage: any
+  private static _rest: REST;
   private static _client: any
   private static _guild: any
   private static _is_ready: any;
@@ -25,10 +26,10 @@ export class Bot {
 
     if (member) {
       return member.kick().then((member) => {
-        const message = new MessageEmbed()
+        const message = new EmbedBuilder()
           .setColor("#14dc1e")
           .setTitle(`${member.nickname} s'envole vers d'autres cieux`)
-          .addField("Cause:", cause)
+          .addFields([{name: "Cause:", value: cause}])
         const channel = Bot.findChannel("ivaofr-logs")
         channel.send({embeds: [message]});
         return true
@@ -56,7 +57,17 @@ export class Bot {
       return new Promise( (resolve, reject) => {
         Bot.is_ready = false;
         Bot.client = new Client({
-          intents: ['GUILD_MEMBERS', 'DIRECT_MESSAGES', 'GUILD_INVITES', 'GUILDS', 'GUILD_MESSAGES', 'GUILD_BANS', 'GUILD_VOICE_STATES']
+          intents: [
+            GatewayIntentBits.GuildMembers,
+            GatewayIntentBits.DirectMessages,
+            GatewayIntentBits.GuildInvites,
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.GuildBans,
+            GatewayIntentBits.GuildVoiceStates,
+            GatewayIntentBits.DirectMessages,
+            GatewayIntentBits.GuildMessageTyping
+          ]
         })
         Bot.client.login(process.env.BOT_TOKEN)
           .then(async res => {
@@ -68,6 +79,7 @@ export class Bot {
             console.error(err)
             reject(err)
           })
+        Bot.rest = new REST({version: '10'}).setToken(process.env.BOT_TOKEN)
       })
     }
     return Bot.client;
@@ -111,6 +123,14 @@ export class Bot {
         }
         return discord_user;
       })
+  }
+
+  static set rest(val) {
+    Bot._rest = val;
+  }
+
+  static get rest() {
+    return Bot._rest;
   }
 
   static set client(val) {

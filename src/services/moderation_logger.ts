@@ -1,12 +1,12 @@
 import {Bot} from "../core/Bot"
-import { GuildMember } from "discord.js";
+import { AuditLogEvent, GuildMember } from "discord.js";
 
 export const init = async () => {
   const bot = await Bot.connect();
   bot.on('guildMemberRemove', async member => {
     const fetchedLogs = await member.guild.fetchAuditLogs({
       limit: 1,
-      type: 'MEMBER_KICK',
+      type: AuditLogEvent.MemberKick,
     });
     // Since there's only 1 audit log entry in this collection, grab the first one
     const kickLog = fetchedLogs.entries.first();
@@ -29,7 +29,7 @@ export const init = async () => {
   bot.on('guildBanAdd', async ban => {
     const fetchedLogs = await ban.guild.fetchAuditLogs({
       limit: 1,
-      type: 'MEMBER_BAN_ADD',
+      type: AuditLogEvent.MemberBanAdd,
     });
     // Since there's only 1 audit log entry in this collection, grab the first one
     const banLog = fetchedLogs.entries.first();
@@ -48,33 +48,25 @@ export const init = async () => {
     } else {
       console.log(`${ban.user.tag} got hit with the swift hammer of justice in the guild ${ban.guild.name}, audit log fetch was inconclusive.`);
     }
+
   });
+
+  
   bot.on('messageDelete', async message => {
     // ignore direct messages
     if (!message.guild) return;
     const fetchedLogs = await message.guild.fetchAuditLogs({
       limit: 1,
-      type: 'MESSAGE_DELETE',
+      type: AuditLogEvent.MessageDelete,
     });
-    // Since we only have 1 audit log entry in this collection, we can simply grab the first one
     const deletionLog = fetchedLogs.entries.first();
 
-    // Let's perform a coherence check here and make sure we got *something*
     if (!deletionLog) return Bot.log(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
 
-    // We now grab the user object of the person who deleted the message
-    // Let us also grab the target of this action to double check things
     const {executor, target} = deletionLog;
 
-
-    // And now we can update our output with a bit more information
-    // We will also run a check to make sure the log we got was for the same author's message
-    if (target instanceof GuildMember && target.id === message.author.id) {
-      Bot.log(`A message by ${message.author.tag} was deleted by ${executor.tag}.`);
-      Bot.log(message.content)
-    } else {
-      Bot.log(`A message by ${message.author.tag} was deleted, but we don't know by who.`);
-    }
+    Bot.log(`A message by ${message.author.tag} was deleted by ${executor.tag}.`);
+    Bot.log(message.content)
   });
 
 }

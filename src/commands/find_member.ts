@@ -1,7 +1,6 @@
 import * as store from "../store"
-import { MessageEmbed } from 'discord.js'
+import { ApplicationCommandPermissions, ApplicationCommandPermissionType, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { DiscordUser } from "../core";
-import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandRegistration } from "./command.interface";
 
 const storage = store.get(process.env.STORAGE)
@@ -10,13 +9,12 @@ export const find_member: CommandRegistration = {
   register: function() {
     return new SlashCommandBuilder().setName('user')
       .setDescription('user [vid]')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
       .addNumberOption(option => option.setName('vid').setDescription('Chercher par VID'))
       .addNumberOption(option => option.setName('discord_id').setDescription('Chercher par Discord ID'))
   },
   execute: async function(interaction){
     const VIDRegex = new RegExp(/(\d{6})/)
-    const TagRegex = new RegExp(/!!member\stag\s(.{3,32}#[0-9]{4})$/)
     const IdRegex = new RegExp(/(\d+)/)
 
     const findUser = async (discord_user, needle) => {
@@ -37,26 +35,28 @@ export const find_member: CommandRegistration = {
           return discord_user;
         })
         .then(discord_user => {
-          return new MessageEmbed()
+          return new EmbedBuilder()
             .setColor("#14dc1e")
             .setTitle("Nungesser a trouvé quelque chose!")
-            .addField("Profil IVAO:", `https://www.ivao.aero/Member.aspx?Id=${discord_user.user_id}`)
-            .addField("VID:", `${discord_user.user_id}`)
-            .addField("Nom:", `${discord_user.full_name}`)
-            .addField("Pseudo:", `${discord_user.nickname}`)
-            .addField("Discord ID:", `${discord_user.discord_id}`)
-            .addField("Discord Tag:", `${discord_user.discord_tag}`)
-            .addField("A accepté les règles?", `${(discord_user.is_active) ? 'Oui' : 'Non'}`)
+            .addFields([
+              { name: `Profil IVAO:`, value: `https://www.ivao.aero/Member.aspx?Id=${discord_user.user_id}` },
+              { name: `VID:`, value: `${discord_user.user_id}`},
+              { name: `Nom:`, value: `${discord_user.name}`},
+              { name: `Pseudo`, value: `${discord_user.nickname}`},
+              { name: `Discord ID:`, value: `${discord_user.discord_id}`},
+              { name: `Discord Tag:`, value: `${discord_user.discord_tag}`},
+              { name: `A accepté les règles?`, value: `${(discord_user.is_active) ? 'Oui' : 'Non'}`},
+            ])
         }).catch(err => {
-          return new MessageEmbed()
+          return new EmbedBuilder()
             .setColor("#DC143C")
             .setTitle("Nungesser a eu des problèmes!")
-            .addField(`Erreur`, `${err.message}`)
+            .addFields([{name: `Erreur`, value: `${err.message}`}])
         })
     }
     let vid = interaction.options.get('vid')
     let discord_id = interaction.options.get('discord_id')
-    let response = new MessageEmbed()
+    let response = new EmbedBuilder()
 
     try {
       if(vid){
@@ -84,15 +84,15 @@ export const find_member: CommandRegistration = {
       console.log(err)
       response.setColor("#DC143C")
         .setTitle("Makemake a eu des problèmes!")
-        .addField(`Erreur`, `${err.message}`)
+        .addFields([{name: `Erreur`, value: `${err.message}`}])
       return response;
     }
     return response;
   },
-  getDefaultPermissions: function(roles){
+  getDefaultPermissions: function(roles) : ApplicationCommandPermissions[]{
     return [{
       id: roles.staff_role.id,
-      type: 'ROLE',
+      type: ApplicationCommandPermissionType.Role,
       permission: true,
     }];
   }

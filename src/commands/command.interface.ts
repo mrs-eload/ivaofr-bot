@@ -1,10 +1,10 @@
-import { MessageEmbed } from "discord.js";
+import { ApplicationCommandPermissions, EmbedBuilder } from "discord.js";
 
 interface ExecuteFunction {
-  (interaction?: any): MessageEmbed |Promise<MessageEmbed>
+  (interaction?: any): EmbedBuilder |Promise<EmbedBuilder>
 }
 interface DefaultPermissionFunction {
-  (roles: any)
+  (roles: any) : ApplicationCommandPermissions[]
 }
 export interface CommandRegistration {
   register: Function,

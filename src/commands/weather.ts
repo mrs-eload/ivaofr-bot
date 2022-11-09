@@ -1,5 +1,4 @@
-import { MessageEmbed } from "discord.js"
-import { SlashCommandBuilder } from "@discordjs/builders";
+import { ApplicationCommandPermissions, ApplicationCommandPermissionType, EmbedBuilder, SlashCommandBuilder } from "discord.js"
 import { CommandRegistration } from "./command.interface";
 import fetch from "node-fetch";
 const icao_metar = [];
@@ -21,12 +20,12 @@ export const metar: CommandRegistration = {
     });
     return new SlashCommandBuilder().setName('metar')
       .setDescription('Récupérer le METAR de la station')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
       .addStringOption(option => option.setName('icao').setDescription('Code ICAO de la station').setRequired(true))
   },
   execute: async function (interaction) {
     const input = interaction.options.get('icao');
-    const response = new MessageEmbed()
+    const response = new EmbedBuilder()
     const icao = input.value.toUpperCase();
     if(!icao_metar.includes(icao)){
       response.setTitle('La station n\'existe pas')
@@ -59,14 +58,14 @@ export const metar: CommandRegistration = {
       response
         .setColor("#DC143C")
         .setTitle("Nungesser a eu des problèmes!")
-        .addField(`Erreur`, `${err.message}`)
+        .addFields([{name: `Erreur`, value: `${err.message}`}])
     }
     return response;
   },
-  getDefaultPermissions: function (roles) {
+  getDefaultPermissions: function (roles): ApplicationCommandPermissions[] {
     return [{
       id: roles.member_role.id,
-      type: 'ROLE',
+      type:  ApplicationCommandPermissionType.Role,
       permission: true,
     }];
   }
@@ -86,12 +85,12 @@ export const taf: CommandRegistration = {
     });
     return new SlashCommandBuilder().setName('taf')
       .setDescription('Récupérer le METAR de la station')
-      .setDefaultPermission(false)
+      .setDefaultMemberPermissions(0)
       .addStringOption(option => option.setName('icao').setDescription('Code ICAO de la station').setRequired(true))
   },
   execute: async function (interaction) {
     const input = interaction.options.get('icao')
-    const response = new MessageEmbed()
+    const response = new EmbedBuilder()
     const icao = input.value.toUpperCase();
     if(!icao_taf.includes(icao)){
       response.setTitle('La station n\'existe pas')
@@ -124,14 +123,14 @@ export const taf: CommandRegistration = {
       response
         .setColor("#DC143C")
         .setTitle("Nungesser a eu des problèmes!")
-        .addField(`Erreur`, `${err.message}`)
+        .addFields([{name: `Erreur`, value: `${err.message}`}])
     }
     return response;
   },
-  getDefaultPermissions: function (roles) {
+  getDefaultPermissions: function (roles): ApplicationCommandPermissions[] {
     return [{
       id: roles.member_role.id,
-      type: 'ROLE',
+      type:  ApplicationCommandPermissionType.Role,
       permission: true,
     }];
   }

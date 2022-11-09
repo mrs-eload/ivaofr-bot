@@ -1,14 +1,12 @@
 import { Bot } from '../core'
 import {
-  CategoryChannel,
+  ChannelType,
   GuildChannel,
-  NewsChannel,
-  Permissions, StageChannel, StoreChannel,
+   NonThreadGuildBasedChannel, PermissionFlagsBits,
   TextChannel,
-  VoiceChannel
 } from "discord.js";
-import { ChannelTypes } from "discord.js/typings/enums";
 import { fetchRoles, memberHasRoleId } from "./roles";
+import { MapToRecord } from "../core/utils";
 
 
 export async function cleanChannel (channel: TextChannel){
@@ -21,8 +19,8 @@ export const checkChannels = async () => {
   await Bot.connect();
 
   const channels = await Bot.guild.channels.fetch();
-  const voice_channels = [...channels.values()].filter(channel => channel?.type === 'GUILD_VOICE')
-  const text_channels = [...channels.values()].filter(channel => channel?.type === 'GUILD_TEXT')
+  const voice_channels = [...channels.values()].filter(channel => channel?.type === ChannelType.GuildVoice)
+  const text_channels = [...channels.values()].filter(channel => channel?.type === ChannelType.GuildText)
   const roles = await fetchRoles(Bot.guild, true)
 
   for (const channel of voice_channels) {
@@ -31,38 +29,38 @@ export const checkChannels = async () => {
     const channel_permissions = await getCommonChannelPermissions(channel, roles);
 
     if (!txt_channel) {
-      await Bot.guild.channels.create(text_eq, {
+      await Bot.guild.channels.create({
+        name: text_eq,
+        type: ChannelType.GuildText,
         position: (channel.position > 0) ? channel.position - 1 : 0,
-        parent: channel.parentId,
-        type: ChannelTypes.GUILD_TEXT,
+        parent: channel.parent,
         permissionOverwrites: channel_permissions,
-      });
+      })
       console.log(`Channel ${text_eq} created`)
     }else{
       await txt_channel.permissionOverwrites.set(channel_permissions);
     }
   }
 }
-
-async function getCommonChannelPermissions(channel: TextChannel | VoiceChannel | CategoryChannel | NewsChannel | StoreChannel | StageChannel, roles){
+async function getCommonChannelPermissions(channel: NonThreadGuildBasedChannel, roles){
 
   const everyone_role = Bot.guild.roles.cache.find(role => role.name === '@everyone');
 
   const common_permissions = [
-    Permissions.FLAGS.VIEW_CHANNEL,
-    Permissions.FLAGS.SEND_MESSAGES,
-    Permissions.FLAGS.SEND_TTS_MESSAGES,
-    Permissions.FLAGS.ADD_REACTIONS,
-    Permissions.FLAGS.ATTACH_FILES,
-    Permissions.FLAGS.USE_PUBLIC_THREADS,
-    Permissions.FLAGS.CREATE_PUBLIC_THREADS,
-    Permissions.FLAGS.SEND_MESSAGES_IN_THREADS,
-    Permissions.FLAGS.EMBED_LINKS,
-    Permissions.FLAGS.READ_MESSAGE_HISTORY,
-    Permissions.FLAGS.USE_APPLICATION_COMMANDS,
+    PermissionFlagsBits.ViewChannel,
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.SendTTSMessages,
+    PermissionFlagsBits.AddReactions,
+    PermissionFlagsBits.AttachFiles,
+    PermissionFlagsBits.CreatePublicThreads,
+    PermissionFlagsBits.SendMessagesInThreads,
+    PermissionFlagsBits.EmbedLinks,
+    PermissionFlagsBits.UseApplicationCommands,
+    PermissionFlagsBits.ReadMessageHistory,
+    PermissionFlagsBits.UseEmbeddedActivities,
   ];
 
-  if(channel.parent.name.toLowerCase().indexOf('training') > -1){
+  if(channel.parent?.name.toLowerCase().indexOf('training') > -1){
     common_permissions.pop();
   }
 
@@ -107,36 +105,27 @@ export const text_to_voice = async () => {
       if (voice.channel) {
         const textName = voiceChannelNameToTxt(voice.channel.name);
         const textChannel: GuildChannel = <GuildChannel>guild.channels.cache.find(c => c.name === textName);
+
         if (textChannel) {
-          if(textChannel.parent.name.toLowerCase().indexOf('training') > -1){
-            await textChannel.permissionOverwrites.create(member, {
-              VIEW_CHANNEL: true,
-              SEND_MESSAGES: true,
-              SEND_TTS_MESSAGES: true,
-              ADD_REACTIONS: true,
-              ATTACH_FILES: true,
-              USE_PUBLIC_THREADS: true,
-              CREATE_PUBLIC_THREADS: true,
-              SEND_MESSAGES_IN_THREADS: true,
-              EMBED_LINKS: true,
-              READ_MESSAGE_HISTORY: false,
-              USE_APPLICATION_COMMANDS: true,
-            });
-          }else{
-            await textChannel.permissionOverwrites.create(member, {
-              VIEW_CHANNEL: true,
-              SEND_MESSAGES: true,
-              SEND_TTS_MESSAGES: true,
-              ADD_REACTIONS: true,
-              ATTACH_FILES: true,
-              USE_PUBLIC_THREADS: true,
-              CREATE_PUBLIC_THREADS: true,
-              SEND_MESSAGES_IN_THREADS: true,
-              EMBED_LINKS: true,
-              USE_APPLICATION_COMMANDS: true,
-              READ_MESSAGE_HISTORY: memberHasRoleId(member, roles.staff_role.id),
-            });
+
+          const textChannelPermissions = new Map();
+          textChannelPermissions.set(PermissionFlagsBits.ViewChannel, true);
+          textChannelPermissions.set(PermissionFlagsBits.SendMessages, true);
+          textChannelPermissions.set(PermissionFlagsBits.SendTTSMessages, true);
+          textChannelPermissions.set(PermissionFlagsBits.AddReactions, true);
+          textChannelPermissions.set(PermissionFlagsBits.AttachFiles, true);
+          textChannelPermissions.set(PermissionFlagsBits.CreatePublicThreads, true);
+          textChannelPermissions.set(PermissionFlagsBits.SendMessagesInThreads, true);
+          textChannelPermissions.set(PermissionFlagsBits.EmbedLinks, true);
+          textChannelPermissions.set(PermissionFlagsBits.ReadMessageHistory, false);
+          textChannelPermissions.set(PermissionFlagsBits.UseApplicationCommands, true);
+
+          if(textChannel.parent.name.toLowerCase().indexOf('training') === -1){
+            textChannelPermissions.set(PermissionFlagsBits.ReadMessageHistory, memberHasRoleId(member, roles.staff_role.id));
           }
+
+          const permission_map = MapToRecord(textChannelPermissions);
+          await textChannel.permissionOverwrites.create(member, permission_map);
         }
       }
     }
